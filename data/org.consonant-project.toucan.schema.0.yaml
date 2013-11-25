@@ -1,0 +1,167 @@
+name: org.consonant-project.toucan.schema.0
+classes:
+    info:
+        properties:
+            name:
+                type: text
+            description:
+                type: text
+                optional: true
+    view:
+        properties:
+            name:
+                type: text
+            description:
+                type: text
+                optional: true
+            lanes:
+                type: list
+                elements:
+                  type: reference
+                  class: lane
+                  bidirectional: views
+    lane:
+        properties:
+            views:
+                type: list
+                elements:
+                    type: reference
+                    class: view
+                    bidirectional: lanes
+            name:
+                type: text
+            description:
+                type: text
+                optional: true
+            cards:
+                type: list
+                elements:
+                    type: reference
+                    class: card
+                    bidirectional: lane
+                optional: true
+            validators:
+                type: list
+                elements:
+                    type: text
+                optional: true
+            triggers:
+                type: list
+                elements:
+                    type: text
+                optional: true
+    card:
+        properties:
+            number:
+                type: int
+                unique: true
+            creator:
+                type: reference
+                class: user
+            title:
+                type: text
+            description:
+                type: text
+                optional: true
+            lane:
+                type: reference
+                class: lane
+                bidirectional: cards
+            milestone:
+                type: reference
+                class: milestone
+                bidirectional: cards
+                optional: true
+            reason:
+                type: reference
+                class: reason
+                bidirectional: cards
+            assignees:
+                type: list
+                elements:
+                    type: reference
+                    class: user
+                optional: true
+            comments:
+                type: list
+                elements:
+                    type: reference
+                    class: comment
+                    bidirectional: card
+                optional: true
+    reason:
+        properties:
+            name:
+                type: text
+            description:
+                type: text
+                optional: true
+            work-items:
+                type: list
+                elements:
+                    type: reference
+                    class: work-item
+                    schema: org.consonant-project.mustard.schema.0
+                optional: true
+    milestone:
+        properties:
+            name:
+                type: text
+            description:
+                type: text
+                optional: true
+            deadline:
+                type: timestamp
+    user:
+        properties:
+            name:
+                type: text
+            email:
+                type: text
+            role:
+                type: text
+            config:
+                type: reference
+                class: user-config
+                bidirectional: user
+    user-config:
+        properties:
+            user:
+                type: reference
+                class: user
+                bidirectional: config
+            avatar:
+                type: raw
+                content-type-regex:
+                - ^image\/.+$
+                optional: true
+            default-view:
+                type: reference
+                class: view
+                optional: true
+    comment:
+        properties:
+            card:
+                type: reference
+                class: card
+                bidirectional: comments
+            author:
+                type: reference
+                class: user
+            comment:
+                type: text
+            attachment:
+                type: reference
+                class: attachment
+                bidirectional: comment
+                optional: true
+    attachment:
+        properties:
+            comment:
+                type: reference
+                class: comment
+                bidirectional: attachment
+            name:
+                type: text
+            data:
+                type: raw
