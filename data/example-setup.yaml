@@ -1,0 +1,32 @@
+name: example.board
+schema: org.consonant-project.toucan.schema.0
+info:
+    name: Toucan board
+    description: This is an example Toucan board.
+lanes:
+  - name: Worklist
+    description: Tasks to be worked on in the future.
+  - name: Backlog
+    description: Tasks to be worked on next.
+  - name: Doing
+    description: Tasks currently being worked on.
+  - name: Review
+    description: >
+      Tasks pending review or currently being reviewed.
+  - name: Done
+    description: Completed and reviewed tasks.
+views:
+  - name: Default
+    description: >
+        Default view showing all lanes of the board.
+    lanes:
+      - Worklist
+      - Backlog
+      - Doing
+      - Review
+      - Done
+users:
+  - name: Jannis Pohlmann
+    email: jannis.pohlmann@codethink.co.uk
+    roles:
+      - admin
