@@ -1,0 +1,150 @@
+Set up new Toucan boards
+========================
+
+Create a setup file
+-------------------
+
+    IMPLEMENTS GIVEN a setup file
+    touch $DATADIR/setup-file.yaml
+
+Define the store name
+---------------------
+
+    IMPLEMENTS GIVEN a store name "(.+)" in the setup file
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+    name: $MATCH_1
+    EOF
+
+Define the schema name
+----------------------
+
+    IMPLEMENTS GIVEN a schema name "(.+)" in the setup file
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+    schema: $MATCH_1
+    EOF
+
+Define the board name
+---------------------
+
+    IMPLEMENTS GIVEN a board name "(.+)" in the setup file
+    if ! grep "^info:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+    info:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+      name: $MATCH_1
+    EOF
+
+Define the board description
+----------------------------
+
+    IMPLEMENTS GIVEN a board description "(.+)" in the setup file
+    if ! grep "^info:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+    info:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+      description: $MATCH_1
+    EOF
+
+Define a lane
+-------------
+
+    IMPLEMENTS GIVEN a lane "(.+)" with the description "(.+)" in the setup file
+    if ! grep "^lanes:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+    lanes:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+      - name: $MATCH_1
+        description: $MATCH_2
+    EOF
+
+Define a view
+-------------
+
+    IMPLEMENTS GIVEN a view "(.+)" with the description "(.+)" in the setup file
+    if ! grep "^views:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+    views:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+      - name: $MATCH_1
+        description: $MATCH_2
+    EOF
+
+Define the lanes of a view
+--------------------------
+
+    IMPLEMENTS GIVEN this view includes the lane "(.+)" in the setup file
+    if ! grep "^    lanes:" $DATADIR/setup-file.yaml 2>&1 >dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+        lanes:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+          - $MATCH_1
+    EOF
+
+Define a user
+-------------
+
+    IMPLEMENTS GIVEN a user with the name "(.+)" in the setup file
+    if ! grep "^users:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+    users:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+      - name: $MATCH_1
+    EOF
+
+Define the email address of a user
+----------------------------------
+
+    IMPLEMENTS GIVEN this user has the email address "(.+)" in the setup file
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+        email: $MATCH_1
+    EOF
+
+Define the role of a user
+-------------------------
+
+    IMPLEMENTS GIVEN this user has the role "(.+)" in the setup file
+    if ! grep "^    roles:" $DATADIR/setup-file.yaml 2>&1 >dev/null; then
+      cat <<-EOF >> $DATADIR/setup-file.yaml
+        roles:
+    EOF
+    fi
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+          - $MATCH_1
+    EOF
+
+Run toucan setup
+----------------
+
+    IMPLEMENTS WHEN running "toucan setup"
+
+    run_toucan_cli <<-EOF
+    setup $DATADIR/setup-file.yaml $DATADIR/board
+    EOF
+
+Check whether the working directory is a git repository
+-------------------------------------------------------
+
+    IMPLEMENTS THEN the board directory is a non-bare git repository
+
+    test -d $DATADIR/board/.git 
+
+Check whether the working directory has a given number of commits
+-----------------------------------------------------------------
+
+    IMPLEMENTS THEN the board repository has exactly ([0-9]+) commits?
+
+    cd $DATADIR/board
+    COUNT=$(git log --format=oneline | wc -l | xargs echo -n)
+    test 0 -eq $COUNT

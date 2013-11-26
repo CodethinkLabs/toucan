@@ -1,0 +1,120 @@
+Set up new Toucan boards
+========================
+
+Create a board with a single view and three lanes
+-------------------------------------------------
+
+    SCENARIO create a board with a single view and lane
+    GIVEN    a setup file
+    AND      a store name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a lane "Backlog" with the description "Next tasks" in the setup file
+    AND      a lane "Doing" with the description "Current tasks" in the setup file
+    AND      a lane "Done" with the description "Completed tasks" in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+    AND      this view includes the lane "Backlog" in the setup file
+    AND      this view includes the lane "Done" in the setup file
+    AND      this view includes the lane "Review" in the setup file
+    AND      a user with the name "Test user" in the setup file
+    AND      this user has the email address "test-user@project.org" in the setup file
+    AND      this user has the role "admin" in the setup file
+
+    WHEN     running "toucan setup"
+
+    THEN     the board directory is a non-bare git repository
+    AND      the board repository has exactly 1 commit
+
+AND      the board uses the store name "test-board"
+AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+AND      the board has the name "Test Board"
+AND      the board has the description "This is a test board."
+
+AND      the board has exactly 3 lanes
+AND      the board has a lane "Backlog"
+AND      the lane "Backlog" has the description "Next tasks"
+AND      the board has a lane "Doing"
+AND      the lane "Doing" has the a description "Current tasks"
+AND      the board has a lane "Done"
+AND      the lane "Done" has the description "Completed tasks"
+
+AND      the board has exactly 1 view
+AND      the board has a view "Default"
+AND      the view "Default has the description "Default view"
+AND      the view "Default" includes exactly 3 lanes
+AND      the view "Default" includes the lane "Backlog"
+AND      the view "Default" includes the lane "Doing"
+AND      the view "Default" includes the lane "Done"
+
+AND      the board has exactly 1 user
+AND      the board has a user named "Test user"
+AND      the user "Test user" has the email address "test-user@project.org"
+AND      the user "Test user" has exactly 1 role
+AND      the user "Test user" has the role "admin"
+
+Create a board with a two views view, four lanes and two users
+--------------------------------------------------------------
+
+    SCENARIO create a board with two views, four lanes and two users
+    GIVEN    a setup file
+    AND      a store name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a lane "Backlog" with the description "Next tasks" in the setup file
+    AND      a lane "Doing" with the description "Current tasks" in the setup file
+    AND      a lane "Review" with the description "Tasks pending review" in the setup file
+    AND      a lane "Done" with the description "Completed tasks" in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+    AND      this view includes the lane "Backlog" in the setup file
+    AND      this view includes the lane "Doing" in the setup file
+    AND      this view includes the lane "Review" in the setup file
+    AND      a view "Review" with the description "Review view" in the setup file
+    AND      this view includes the lane "Review" in the setup file
+    AND      this view includes the lane "Done" in the setup file
+    AND      a user with the name "Developer" in the setup file
+    AND      this user has the email address "developer@project.org" in the setup file
+    AND      this user has the role "admin" in the setup file
+    AND      a user with the name "Reviewer" in the setup file
+    AND      this user has the email address "reviewer@project.org" in the setup file
+    AND      this user has the role "writer" in the setup file
+
+    WHEN     running "toucan setup"
+
+    THEN     the board directory is a non-bare git repository
+    AND      the board repository has exactly 1 commit
+
+AND      the board uses the store name "test-board"
+AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+AND      the board has the name "Test Board"
+AND      the board has the description "This is a test board."
+
+AND      the board has exactly 4 lanes
+AND      the board has a lane "Backlog"
+AND      the lane "Backlog" has the description "Next tasks"
+AND      the board has a lane "Doing"
+AND      the lane "Doing" has the a description "Current tasks"
+AND      the board has a lane "Review"
+AND      the lane "Done" has the description "Tasks pending review"
+AND      the board has a lane "Done"
+AND      the lane "Done" has the description "Completed tasks"
+
+AND      the board has exactly 2 views
+AND      the board has a view "Default"
+AND      the view "Default" has the description "Default view"
+AND      the view "Default" includes exactly 3 lanes
+AND      the view "Default" includes the lane "Backlog"
+AND      the view "Default" includes the lane "Doing"
+AND      the view "Default" includes the lane "Review"
+AND      the board has a view "Review"
+AND      the view "Review" has the description "Review view"
+AND      the view "Review" includes exactly 2 lanes
+AND      the view "Review" includes the lane "Review"
+AND      the view "Review" includes the lane "Done"
+
+AND      the board has exactly 1 user
+AND      the board has a user named "Test user"
+AND      the user "Test user" has the email address "test-user@project.org"
+AND      the user "Test user" has exactly 1 role
+AND      the user "Test user" has the role "admin"
