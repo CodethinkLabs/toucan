@@ -24,14 +24,14 @@ Create a board with a single view and three lanes
     WHEN     running "toucan setup"
 
     THEN     the board directory is a non-bare git repository
-    AND      the board repository has exactly 1 commit
+    AND      the board repository has exactly 2 commits
 
-AND      the board uses the store name "test-board"
-AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
-AND      the board has the name "Test Board"
-AND      the board has the description "This is a test board."
+    AND      the board uses the store name "test-board"
+    AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+    AND      the board has the name "Test Board"
+    AND      the board has the description "This is a test board."
 
-AND      the board has exactly 3 lanes
+    AND      the board has exactly 3 lanes
 AND      the board has a lane "Backlog"
 AND      the lane "Backlog" has the description "Next tasks"
 AND      the board has a lane "Doing"
@@ -83,14 +83,14 @@ Create a board with a two views view, four lanes and two users
     WHEN     running "toucan setup"
 
     THEN     the board directory is a non-bare git repository
-    AND      the board repository has exactly 1 commit
+    AND      the board repository has exactly 2 commits
 
-AND      the board uses the store name "test-board"
-AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
-AND      the board has the name "Test Board"
-AND      the board has the description "This is a test board."
+    AND      the board uses the store name "test-board"
+    AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+    AND      the board has the name "Test Board"
+    AND      the board has the description "This is a test board."
 
-AND      the board has exactly 4 lanes
+    AND      the board has exactly 4 lanes
 AND      the board has a lane "Backlog"
 AND      the lane "Backlog" has the description "Next tasks"
 AND      the board has a lane "Doing"

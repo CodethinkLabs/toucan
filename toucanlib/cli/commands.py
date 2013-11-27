@@ -50,5 +50,6 @@ class SetupCommand(object):
         # initialise the Git repository
         repo = pygit2.init_repository(self.target_dir)
 
+        # perform the actual board setup
         setup = toucanlib.cli.setup.SetupRunner()
         setup.run(repo, setup_file)

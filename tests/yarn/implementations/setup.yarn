@@ -129,6 +129,8 @@ Run toucan setup
 
     IMPLEMENTS WHEN running "toucan setup"
 
+    env
+    git config --global --list
     run_toucan_cli <<-EOF
     setup $DATADIR/setup-file.yaml $DATADIR/board
     EOF
@@ -147,4 +149,65 @@ Check whether the working directory has a given number of commits
 
     cd $DATADIR/board
     COUNT=$(git log --format=oneline | wc -l | xargs echo -n)
-    test 0 -eq $COUNT
+    test $MATCH_1 -eq $COUNT
+
+Check whether board uses a given store name
+-------------------------------------------
+
+    IMPLEMENTS THEN the board uses the store name "(.+)"
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    assert store.name(commit) == "$MATCH_1"
+    EOF
+
+Check whether board uses a given schema name
+--------------------------------------------
+
+    IMPLEMENTS THEN the board uses the schema name "(.+)"
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    assert store.schema(commit).name == "$MATCH_1"
+    EOF
+
+Check whether board has a given name
+------------------------------------
+
+    IMPLEMENTS THEN the board has the name "(.+)"
+
+    GIT_DIR=$DATADIR/board/.git git ls-tree -r master
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, 'info')
+    infos = store.objects(commit, klass)
+    assert len(infos) == 1
+    assert infos[0].properties['name'].value == "$MATCH_1"
+    EOF
+
+Check whether board has a given description
+-------------------------------------------
+
+    IMPLEMENTS THEN the board has the description "(.+)"
+
+    GIT_DIR=$DATADIR/board/.git git ls-tree -r master
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, 'info')
+    infos = store.objects(commit, klass)
+    assert len(infos) == 1
+    assert infos[0].properties['description'].value == "$MATCH_1"
+    EOF
+
+Check whether board has a given number of lanes
+-----------------------------------------------
+
+    IMPLEMENTS THEN the board has exactly ([0-9]+) lanes?
+
+    GIT_DIR=$DATADIR/board/.git git ls-tree -r master
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, 'lane')
+    lanes = store.objects(commit, klass)
+    assert len(lanes) == $MATCH_1
+    EOF

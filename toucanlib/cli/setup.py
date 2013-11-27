@@ -17,9 +17,14 @@
 """Representation, parsing and execution of Toucan board setup files."""
 
 
+import consonant
+import pygit2
+import time
 import yaml
 
-from consonant.util import expressions
+from consonant.store import properties
+from consonant.transaction import actions, transactions
+from consonant.util import expressions, git
 from consonant.util.phase import Phase
 
 
@@ -344,4 +349,84 @@ class SetupRunner(object):
     def run(self, repo, setup_file):
         """Perform the board setup against a repository and setup file."""
 
-        pass
+        author = pygit2.Signature(
+            git.subcommand(repo, ['config', 'user.name']),
+            git.subcommand(repo, ['config', 'user.email']))
+
+        self._create_initial_commit(repo, setup_file, author)
+        self._populate_store(repo, setup_file, author)
+
+    def _create_initial_commit(self, repo, setup_file, author):
+        builder = repo.TreeBuilder()
+        self._create_meta_data(repo, setup_file, builder)
+        tree_oid = builder.write()
+        repo.create_commit(
+            'refs/heads/master',
+            author, author,
+            'Create store for board "%s"' % setup_file.board_name,
+            tree_oid, [])
+
+    def _create_meta_data(self, repo, setup_file, builder):
+        meta_data = {
+            'name': setup_file.service_name,
+            'schema': setup_file.schema_name,
+            }
+        data = yaml.dump(meta_data)
+        blob_oid = repo.create_blob(data)
+        builder.insert('consonant.yaml', blob_oid, pygit2.GIT_FILEMODE_BLOB)
+
+    def _populate_store(self, repo, setup_file, author):
+        # obtain a Consonant store for the repository
+        store_location = repo.path
+        factory = consonant.service.factories.ServiceFactory()
+        store = factory.service(store_location)
+
+        # define what to base the initial transaction on
+        begin_action = actions.BeginAction(
+            'begin', store.ref('master').head.sha1)
+
+        # define where to land the initial transaction
+        commit_action = actions.CommitAction(
+            'commit', 'refs/heads/master',
+            '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
+            '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
+            'Populate store for board "%s"' % setup_file.board_name)
+
+        # create actions for all the objects
+        create_actions = self._create_create_actions(setup_file)
+
+        # create a transaction to populate the store with the initial
+        # board info, views, lanes and users
+        transaction = transactions.Transaction(
+            [begin_action] + create_actions + [commit_action])
+
+        # apply the transaction
+        store.apply_transaction(transaction)
+
+    def _create_create_actions(self, setup_file):
+        # assign an action ID to each object to be created
+        action_ids = {}
+        for view in setup_files.views.itervalues():
+            action_ids[view] = len(action_ids) + 1
+        for lane in setup_files.lanes.itervalues():
+            action_ids[lane] = len(action_ids) + 1
+        for user in setup_files.users.itervalues():
+            action_ids[user] = len(action_ids) + 1
+
+        actions = []
+        actions.append(self._create_board_info_action(setup_file))
+        for view in setup_files.views.itervalues():
+            # TODO how do we deal with bidirectional references
+            # if actions may not refer to objects created in later
+            # actions?
+            pass
+        return actions
+
+    def _create_board_info_action(self, setup_file):
+        props = [properties.TextProperty('name', setup_file.board_name)]
+        if setup_file.board_description:
+            props.append(properties.TextProperty(
+                'description', setup_file.board_description))
+        return actions.CreateAction('info', 'info', props)
+
+    def _create_lane_
