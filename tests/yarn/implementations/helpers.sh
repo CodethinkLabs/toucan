@@ -19,11 +19,40 @@
 # Helper functions for scenario tests.
 
 
+export HOME="$DATADIR/home"
 export PYTHONPATH="$SRCDIR:$PYTHONPATH"
 export XDG_CONFIG_DIRS="$DATADIR/system-config-dir"
 export XDG_CONFIG_HOME="$DATADIR/user-config-dir"
 export XDG_DATA_DIRS="$DATADIR/system-data-dir"
 export XDG_DATA_HOME="$DATADIR/user-data-dir"
+
+
+# Create the home directory
+if [[ ! -d "$HOME" ]]; then
+    mkdir "$HOME"
+fi
+
+
+# Create a global git config for the test user
+if [[ ! -e "$HOME/.gitconfig" ]]; then
+    cat > "$HOME/.gitconfig" <<-EOF
+[user]
+    name = Test user
+    email = test.user@project.org
+EOF
+fi
+
+
+# Create a consonant register
+if [[ ! -d "$DATADIR/system-config-dir/consonant" ]]; then
+    mkdir -p "$DATADIR/system-config-dir/consonant"
+    cat > "$DATADIR/system-config-dir/consonant/register.yaml" <<-EOF
+schemas:
+    org.consonant-project.toucan.schema.0: >
+        file://$SRCDIR/data/org.consonant-project.toucan.schema.0.yaml
+EOF
+fi
+
 
 
 dump_output()
@@ -47,4 +76,42 @@ run_toucan_cli()
     $SRCDIR/toucan $PARAMS >$DATADIR/stdout 2>$DATADIR/stderr
     echo $? > $DATADIR/exit-code
     exit 0
+}
+
+
+run_python_test()
+{
+    trap dump_output 0
+    cd $DATADIR
+    CODE=$(cat)
+    cat > test.py <<-EOF
+import yaml
+
+$CODE
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}
+
+
+run_consonant_store_test()
+{
+    trap dump_output 0
+    cd $DATADIR
+    CODE=$(cat)
+    cat > test.py <<-EOF
+import consonant
+import os
+import yaml
+
+store_location = os.path.abspath(os.path.join('board'))
+factory = consonant.service.factories.ServiceFactory()
+store = factory.service(store_location)
+
+$CODE
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
 }
