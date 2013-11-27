@@ -15,8 +15,8 @@ Create a board with a single view and three lanes
     AND      a lane "Done" with the description "Completed tasks" in the setup file
     AND      a view "Default" with the description "Default view" in the setup file
     AND      this view includes the lane "Backlog" in the setup file
+    AND      this view includes the lane "Doing" in the setup file
     AND      this view includes the lane "Done" in the setup file
-    AND      this view includes the lane "Review" in the setup file
     AND      a user with the name "Test user" in the setup file
     AND      this user has the email address "test-user@project.org" in the setup file
     AND      this user has the role "admin" in the setup file
