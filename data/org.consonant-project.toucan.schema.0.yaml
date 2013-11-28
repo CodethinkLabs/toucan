@@ -118,8 +118,10 @@ classes:
                 type: text
             email:
                 type: text
-            role:
-                type: text
+            roles:
+                type: list
+                elements:
+                    type: text
             config:
                 type: reference
                 class: user-config
