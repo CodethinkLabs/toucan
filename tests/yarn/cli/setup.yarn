@@ -10,13 +10,16 @@ Create a board with a single view and three lanes
     AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
     AND      a board name "Test Board" in the setup file
     AND      a board description "This is a test board." in the setup file
+    AND      a list of lanes in the setup file
     AND      a lane "Backlog" with the description "Next tasks" in the setup file
     AND      a lane "Doing" with the description "Current tasks" in the setup file
     AND      a lane "Done" with the description "Completed tasks" in the setup file
+    AND      a list of views in the setup file
     AND      a view "Default" with the description "Default view" in the setup file
     AND      this view includes the lane "Backlog" in the setup file
     AND      this view includes the lane "Doing" in the setup file
     AND      this view includes the lane "Done" in the setup file
+    AND      a list of users in the setup file
     AND      a user with the name "Test user" in the setup file
     AND      this user has the email address "test-user@project.org" in the setup file
     AND      this user has the role "admin" in the setup file
@@ -56,41 +59,41 @@ AND      the user "Test user" has the role "admin"
 Create a board with a two views view, four lanes and two users
 --------------------------------------------------------------
 
-    SCENARIO create a board with two views, four lanes and two users
-    GIVEN    a setup file
-    AND      a store name "test-board" in the setup file
-    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
-    AND      a board name "Test Board" in the setup file
-    AND      a board description "This is a test board." in the setup file
-    AND      a lane "Backlog" with the description "Next tasks" in the setup file
-    AND      a lane "Doing" with the description "Current tasks" in the setup file
-    AND      a lane "Review" with the description "Tasks pending review" in the setup file
-    AND      a lane "Done" with the description "Completed tasks" in the setup file
-    AND      a view "Default" with the description "Default view" in the setup file
-    AND      this view includes the lane "Backlog" in the setup file
-    AND      this view includes the lane "Doing" in the setup file
-    AND      this view includes the lane "Review" in the setup file
-    AND      a view "Review" with the description "Review view" in the setup file
-    AND      this view includes the lane "Review" in the setup file
-    AND      this view includes the lane "Done" in the setup file
-    AND      a user with the name "Developer" in the setup file
-    AND      this user has the email address "developer@project.org" in the setup file
-    AND      this user has the role "admin" in the setup file
-    AND      a user with the name "Reviewer" in the setup file
-    AND      this user has the email address "reviewer@project.org" in the setup file
-    AND      this user has the role "writer" in the setup file
+SCENARIO create a board with two views, four lanes and two users
+GIVEN    a setup file
+AND      a store name "test-board" in the setup file
+AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+AND      a board name "Test Board" in the setup file
+AND      a board description "This is a test board." in the setup file
+AND      a lane "Backlog" with the description "Next tasks" in the setup file
+AND      a lane "Doing" with the description "Current tasks" in the setup file
+AND      a lane "Review" with the description "Tasks pending review" in the setup file
+AND      a lane "Done" with the description "Completed tasks" in the setup file
+AND      a view "Default" with the description "Default view" in the setup file
+AND      this view includes the lane "Backlog" in the setup file
+AND      this view includes the lane "Doing" in the setup file
+AND      this view includes the lane "Review" in the setup file
+AND      a view "Review" with the description "Review view" in the setup file
+AND      this view includes the lane "Review" in the setup file
+AND      this view includes the lane "Done" in the setup file
+AND      a user with the name "Developer" in the setup file
+AND      this user has the email address "developer@project.org" in the setup file
+AND      this user has the role "admin" in the setup file
+AND      a user with the name "Reviewer" in the setup file
+AND      this user has the email address "reviewer@project.org" in the setup file
+AND      this user has the role "writer" in the setup file
 
-    WHEN     running "toucan setup"
+WHEN     running "toucan setup"
 
-    THEN     the board directory is a non-bare git repository
-    AND      the board repository has exactly 2 commits
+THEN     the board directory is a non-bare git repository
+AND      the board repository has exactly 2 commits
 
-    AND      the board uses the store name "test-board"
-    AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
-    AND      the board has the name "Test Board"
-    AND      the board has the description "This is a test board."
+AND      the board uses the store name "test-board"
+AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+AND      the board has the name "Test Board"
+AND      the board has the description "This is a test board."
 
-    AND      the board has exactly 4 lanes
+AND      the board has exactly 4 lanes
 AND      the board has a lane "Backlog"
 AND      the lane "Backlog" has the description "Next tasks"
 AND      the board has a lane "Doing"

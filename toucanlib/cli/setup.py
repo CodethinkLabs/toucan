@@ -392,8 +392,17 @@ class SetupRunner(object):
             '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
             'Populate store for board "%s"' % setup_file.board_name)
 
+        # assign an action ID to each object to be created
+        action_ids = {}
+        for view in setup_file.views.itervalues():
+            action_ids[tuple(view)] = len(action_ids) + 1
+        for lane in setup_file.lanes.itervalues():
+            action_ids[tuple(lane)] = len(action_ids) + 1
+        for user in setup_file.users.itervalues():
+            action_ids[tuple(user)] = len(action_ids) + 1
+
         # create actions for all the objects
-        create_actions = self._create_create_actions(setup_file)
+        create_actions = self._create_objects(setup_file, action_ids)
 
         # create a transaction to populate the store with the initial
         # board info, views, lanes and users
@@ -403,30 +412,81 @@ class SetupRunner(object):
         # apply the transaction
         store.apply_transaction(transaction)
 
-    def _create_create_actions(self, setup_file):
-        # assign an action ID to each object to be created
-        action_ids = {}
-        for view in setup_files.views.itervalues():
-            action_ids[view] = len(action_ids) + 1
-        for lane in setup_files.lanes.itervalues():
-            action_ids[lane] = len(action_ids) + 1
-        for user in setup_files.users.itervalues():
-            action_ids[user] = len(action_ids) + 1
-
+    def _create_objects(self, setup_file, action_ids):
         actions = []
-        actions.append(self._create_board_info_action(setup_file))
-        for view in setup_files.views.itervalues():
-            # TODO how do we deal with bidirectional references
-            # if actions may not refer to objects created in later
-            # actions?
-            pass
+
+        actions.append(self._create_board_info(setup_file))
+
+        for view in setup_file.views.itervalues():
+            actions.append(self._create_view(setup_file, action_ids, view))
+        for lane in setup_file.lanes.itervalues():
+            actions.append(self._create_lane(setup_file, action_ids, lane))
+        for user in setup_file.users.itervalues():
+            actions.append(self._create_user(setup_file, action_ids, user))
+
+        for view in setup_file.views.itervalues():
+            actions.append(self._update_view(setup_file, action_ids, view))
+        for lane in setup_file.lanes.itervalues():
+            actions.append(self._update_lane(setup_file, action_ids, lane))
+
         return actions
 
-    def _create_board_info_action(self, setup_file):
-        props = [properties.TextProperty('name', setup_file.board_name)]
+    def _create_board_info(self, setup_file):
+        props = [
+            properties.TextProperty('name', setup_file.board_name)
+            ]
         if setup_file.board_description:
             props.append(properties.TextProperty(
                 'description', setup_file.board_description))
         return actions.CreateAction('info', 'info', props)
 
-    def _create_lane_
+    def _create_view(self, setup_file, action_ids, view):
+        props = [properties.TextProperty(x, view[x])
+                 for x in ('name', 'description')
+                 if x in view and view[x]]
+        return actions.CreateAction(action_ids[tuple(view)], 'view', props)
+
+    def _create_lane(self, setup_file, action_ids, lane):
+        props = [properties.TextProperty(x, lane[x])
+                 for x in ('name', 'description')
+                 if x in lane and lane[x]]
+        return actions.CreateAction(action_ids[tuple(lane)], 'lane', props)
+
+    def _create_user(self, setup_file, action_ids, user):
+        props = [properties.TextProperty(x, user[x])
+                 for x in ('name', 'email', 'description')
+                 if x in user and user[x]]
+        props.append(properties.ListProperty('roles', [
+            properties.TextProperty('roles', x) for x in user['roles']]))
+        return actions.CreateAction(action_ids[tuple(user)], 'user', props)
+
+    def _update_view(self, setup_file, action_ids, view):
+        references = []
+        for name in view.get('lanes', []):
+            lane = [x for x in setup_file.lanes.itervalues()
+                    if x['name'] == name][0]
+            action_id = action_ids[tuple(lane)]
+            references.append(properties.ReferenceProperty(
+                'lanes', {'action': action_id}))
+
+        return actions.UpdateAction(
+            'update-%s' % action_ids[tuple(view)],
+            None, action_ids[tuple(view)], [
+                properties.ListProperty('lanes', references)
+                ])
+
+    def _update_lane(self, setup_file, action_ids, lane):
+        views = [x for x in setup_file.views.itervalues()
+                 if x.get('lanes', []) and lane['name'] in x['lanes']]
+
+        references = []
+        for view in views:
+            action_id = action_ids[tuple(view)]
+            references.append(properties.ReferenceProperty(
+                'views', {'action': action_id}))
+
+        return actions.UpdateAction(
+            'update-%s' % action_ids[tuple(lane)],
+            None, action_ids[tuple(lane)], [
+                properties.ListProperty('views', references)
+                ])

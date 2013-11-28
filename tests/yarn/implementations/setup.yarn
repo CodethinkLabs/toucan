@@ -5,12 +5,14 @@ Create a setup file
 -------------------
 
     IMPLEMENTS GIVEN a setup file
+
     touch $DATADIR/setup-file.yaml
 
 Define the store name
 ---------------------
 
     IMPLEMENTS GIVEN a store name "(.+)" in the setup file
+
     cat <<-EOF >> $DATADIR/setup-file.yaml
     name: $MATCH_1
     EOF
@@ -19,6 +21,7 @@ Define the schema name
 ----------------------
 
     IMPLEMENTS GIVEN a schema name "(.+)" in the setup file
+
     cat <<-EOF >> $DATADIR/setup-file.yaml
     schema: $MATCH_1
     EOF
@@ -27,6 +30,7 @@ Define the board name
 ---------------------
 
     IMPLEMENTS GIVEN a board name "(.+)" in the setup file
+
     if ! grep "^info:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
       cat <<-EOF >> $DATADIR/setup-file.yaml
     info:
@@ -40,6 +44,7 @@ Define the board description
 ----------------------------
 
     IMPLEMENTS GIVEN a board description "(.+)" in the setup file
+
     if ! grep "^info:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
       cat <<-EOF >> $DATADIR/setup-file.yaml
     info:
@@ -49,15 +54,20 @@ Define the board description
       description: $MATCH_1
     EOF
 
+Define views, lanes or users
+----------------------------
+
+    IMPLEMENTS GIVEN a list of (.+) in the setup file
+
+    cat <<-EOF >> $DATADIR/setup-file.yaml
+    $MATCH_1:
+    EOF
+
 Define a lane
 -------------
 
     IMPLEMENTS GIVEN a lane "(.+)" with the description "(.+)" in the setup file
-    if ! grep "^lanes:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
-      cat <<-EOF >> $DATADIR/setup-file.yaml
-    lanes:
-    EOF
-    fi
+
     cat <<-EOF >> $DATADIR/setup-file.yaml
       - name: $MATCH_1
         description: $MATCH_2
@@ -67,25 +77,18 @@ Define a view
 -------------
 
     IMPLEMENTS GIVEN a view "(.+)" with the description "(.+)" in the setup file
-    if ! grep "^views:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
-      cat <<-EOF >> $DATADIR/setup-file.yaml
-    views:
-    EOF
-    fi
+
     cat <<-EOF >> $DATADIR/setup-file.yaml
       - name: $MATCH_1
         description: $MATCH_2
+        lanes:
     EOF
 
 Define the lanes of a view
 --------------------------
 
     IMPLEMENTS GIVEN this view includes the lane "(.+)" in the setup file
-    if ! grep "^    lanes:" $DATADIR/setup-file.yaml 2>&1 >dev/null; then
-      cat <<-EOF >> $DATADIR/setup-file.yaml
-        lanes:
-    EOF
-    fi
+
     cat <<-EOF >> $DATADIR/setup-file.yaml
           - $MATCH_1
     EOF
@@ -94,6 +97,7 @@ Define a user
 -------------
 
     IMPLEMENTS GIVEN a user with the name "(.+)" in the setup file
+
     if ! grep "^users:" $DATADIR/setup-file.yaml 2>&1 >/dev/null; then
       cat <<-EOF >> $DATADIR/setup-file.yaml
     users:
@@ -107,6 +111,7 @@ Define the email address of a user
 ----------------------------------
 
     IMPLEMENTS GIVEN this user has the email address "(.+)" in the setup file
+
     cat <<-EOF >> $DATADIR/setup-file.yaml
         email: $MATCH_1
     EOF
@@ -115,6 +120,7 @@ Define the role of a user
 -------------------------
 
     IMPLEMENTS GIVEN this user has the role "(.+)" in the setup file
+
     if ! grep "^    roles:" $DATADIR/setup-file.yaml 2>&1 >dev/null; then
       cat <<-EOF >> $DATADIR/setup-file.yaml
         roles:
@@ -130,10 +136,15 @@ Run toucan setup
     IMPLEMENTS WHEN running "toucan setup"
 
     env
+    echo
+    cat $DATADIR/setup-file.yaml
+    echo
     git config --global --list
+    echo
     run_toucan_cli <<-EOF
     setup $DATADIR/setup-file.yaml $DATADIR/board
     EOF
+    GIT_DIR=$DATADIR/board/.git git ls-tree -r master
 
 Check whether the working directory is a git repository
 -------------------------------------------------------
