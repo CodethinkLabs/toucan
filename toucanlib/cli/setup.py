@@ -28,15 +28,60 @@ from consonant.util import expressions, git
 from consonant.util.phase import Phase
 
 
+class MetaData(object):
+
+    """Service meta data in a board setup file."""
+
+    def __init__(self, service_name, schema_name):
+        self.service_name = service_name
+        self.schema_name = schema_name
+
+
+class BoardInfo(object):
+
+    """Board information in a board setup file."""
+
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+
+class View(object):
+
+    """A view definition in a board setup file."""
+
+    def __init__(self, name, description, lanes):
+        self.name = name
+        self.description = description
+        self.lanes = lanes
+
+
+class Lane(object):
+
+    """A lane definition in a board setup file."""
+
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+
+class User(object):
+
+    """A user definition in a board setup file."""
+
+    def __init__(self, name, email, roles):
+        self.name = name
+        self.email = email
+        self.roles = roles
+
+
 class SetupFile(object):
 
     """A Toucan board setup file."""
 
     def __init__(self):
-        self.service_name = None
-        self.schema_name = None
-        self.board_name = None
-        self.board_description = None
+        self.meta_data = None
+        self.board_info = None
         self.views = {}
         self.lanes = {}
         self.users = {}
@@ -113,8 +158,7 @@ class SetupParser(object):
                 data['schema']))
 
     def _load_meta_data(self, phase, data, setup_file):
-        setup_file.service_name = data['name']
-        setup_file.schema_name = data['schema']
+        setup_file.meta_data = MetaData(data['name'], data['schema'])
 
     def _validate_board_info(self, phase, data):
         if not 'info' in data:
@@ -142,8 +186,9 @@ class SetupParser(object):
                     data['info']['description']))
 
     def _load_board_info(self, phase, data, setup_file):
-        setup_file.board_name = data['info']['name']
-        setup_file.board_description = data['info'].get('description', None)
+        setup_file.board_info = BoardInfo(
+            data['info']['name'],
+            data['info'].get('description', None))
 
     def _validate_views(self, phase, data):
         if not 'views' in data:
@@ -208,7 +253,10 @@ class SetupParser(object):
         if not 'views' in data:
             return
         for view in data['views']:
-            setup_file.views[view['name']] = view
+            setup_file.views[view['name']] = View(
+                view['name'],
+                view.get('description', None),
+                view.get('lanes', []))
 
     def _validate_lanes(self, phase, data):
         if not 'lanes' in data:
@@ -259,7 +307,9 @@ class SetupParser(object):
         if not 'lanes' in data:
             return
         for lane in data['lanes']:
-            setup_file.lanes[lane['name']] = lane
+            setup_file.lanes[lane['name']] = Lane(
+                lane['name'],
+                lane.get('description', None))
 
     def _validate_users(self, phase, data):
         if not 'users' in data:
@@ -286,8 +336,11 @@ class SetupParser(object):
                             user['name']))
 
                     # validate user email
-                    if 'email' in user \
-                            and not isinstance(user['email'], basestring):
+                    if not 'email' in user:
+                        phase.error(SetupParserError(
+                            'Setup file defines a user without an email '
+                            'address: %s' % (user)))
+                    elif not isinstance(user['email'], basestring):
                         phase.error(SetupParserError(
                             'Setup file defines a non-string user email: %s' %
                             user['email']))
@@ -308,19 +361,19 @@ class SetupParser(object):
                                     'Setup file defines a non-string '
                                     'user role: %s' % role))
 
-                # detect ambiguous users with the same name
+                # detect ambiguous users with the same email address
                 valid_users = [x for x in data['users']
-                               if isinstance(x, dict) and 'name' in x]
-                names = {}
+                               if isinstance(x, dict) and 'email' in x]
+                emails = {}
                 for user in valid_users:
-                    if not user['name'] in names:
-                        names[user['name']] = []
-                    names[user['name']].append(user)
-                for name, users in names.iteritems():
+                    if not user['email'] in emails:
+                        emails[user['email']] = []
+                    emails[user['email']].append(user)
+                for email, users in emails.iteritems():
                     if len(users) > 1:
                         phase.error(SetupParserError(
                             'Setup file defines %d users with the same '
-                            'name: %s' % (len(users), name)))
+                            'email address: %s' % (len(users), email)))
 
                 # fail if there is no admin user
                 valid_users = [x for x in data['users']
@@ -339,7 +392,10 @@ class SetupParser(object):
         if not 'users' in data:
             return
         for user in data['users']:
-            setup_file.users[user['name']] = user
+            setup_file.users[user['name']] = User(
+                user['name'],
+                user['email'],
+                user.get('roles', []))
 
 
 class SetupRunner(object):
@@ -363,13 +419,13 @@ class SetupRunner(object):
         repo.create_commit(
             'refs/heads/master',
             author, author,
-            'Create store for board "%s"' % setup_file.board_name,
+            'Create store for board "%s"' % setup_file.board_info.name,
             tree_oid, [])
 
     def _create_meta_data(self, repo, setup_file, builder):
         meta_data = {
-            'name': setup_file.service_name,
-            'schema': setup_file.schema_name,
+            'name': setup_file.meta_data.service_name,
+            'schema': setup_file.meta_data.schema_name,
             }
         data = yaml.dump(meta_data)
         blob_oid = repo.create_blob(data)
@@ -390,16 +446,16 @@ class SetupRunner(object):
             'commit', 'refs/heads/master',
             '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
             '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
-            'Populate store for board "%s"' % setup_file.board_name)
+            'Populate store for board "%s"' % setup_file.board_info.name)
 
         # assign an action ID to each object to be created
         action_ids = {}
         for view in setup_file.views.itervalues():
-            action_ids[tuple(view)] = len(action_ids) + 1
+            action_ids[view] = len(action_ids) + 1
         for lane in setup_file.lanes.itervalues():
-            action_ids[tuple(lane)] = len(action_ids) + 1
+            action_ids[lane] = len(action_ids) + 1
         for user in setup_file.users.itervalues():
-            action_ids[tuple(user)] = len(action_ids) + 1
+            action_ids[user] = len(action_ids) + 1
 
         # create actions for all the objects
         create_actions = self._create_objects(setup_file, action_ids)
@@ -417,76 +473,111 @@ class SetupRunner(object):
 
         actions.append(self._create_board_info(setup_file))
 
+        # first pass: create all view, lane, user and user config objects
         for view in setup_file.views.itervalues():
             actions.append(self._create_view(setup_file, action_ids, view))
         for lane in setup_file.lanes.itervalues():
             actions.append(self._create_lane(setup_file, action_ids, lane))
         for user in setup_file.users.itervalues():
             actions.append(self._create_user(setup_file, action_ids, user))
+            actions.append(self._create_user_config(
+                setup_file, action_ids, user))
 
+        # second pass: link all these objects together
         for view in setup_file.views.itervalues():
             actions.append(self._update_view(setup_file, action_ids, view))
         for lane in setup_file.lanes.itervalues():
             actions.append(self._update_lane(setup_file, action_ids, lane))
+        for user in setup_file.users.itervalues():
+            actions.append(self._update_user(setup_file, action_ids, user))
+            actions.append(self._update_user_config(
+                setup_file, action_ids, user))
 
         return actions
 
     def _create_board_info(self, setup_file):
-        props = [
-            properties.TextProperty('name', setup_file.board_name)
-            ]
-        if setup_file.board_description:
+        props = []
+        props.append(properties.TextProperty(
+            'name', setup_file.board_info.name))
+        if setup_file.board_info.description:
             props.append(properties.TextProperty(
-                'description', setup_file.board_description))
+                'description', setup_file.board_info.description))
         return actions.CreateAction('info', 'info', props)
 
     def _create_view(self, setup_file, action_ids, view):
-        props = [properties.TextProperty(x, view[x])
-                 for x in ('name', 'description')
-                 if x in view and view[x]]
-        return actions.CreateAction(action_ids[tuple(view)], 'view', props)
+        action_id = action_ids[view]
+        props = []
+        props.append(properties.TextProperty('name', view.name))
+        if view.description:
+            props.append(properties.TextProperty(
+                'description', view.description))
+        return actions.CreateAction(action_id, 'view', props)
 
     def _create_lane(self, setup_file, action_ids, lane):
-        props = [properties.TextProperty(x, lane[x])
-                 for x in ('name', 'description')
-                 if x in lane and lane[x]]
-        return actions.CreateAction(action_ids[tuple(lane)], 'lane', props)
+        action_id = action_ids[lane]
+        props = []
+        props.append(properties.TextProperty('name', lane.name))
+        if lane.description:
+            props.append(properties.TextProperty(
+                'description', lane.description))
+        return actions.CreateAction(action_id, 'lane', props)
 
     def _create_user(self, setup_file, action_ids, user):
-        props = [properties.TextProperty(x, user[x])
-                 for x in ('name', 'email', 'description')
-                 if x in user and user[x]]
-        props.append(properties.ListProperty('roles', [
-            properties.TextProperty('roles', x) for x in user['roles']]))
-        return actions.CreateAction(action_ids[tuple(user)], 'user', props)
+        action_id = action_ids[user]
+        props = []
+        props.append(properties.TextProperty('name', user.name))
+        if user.email:
+            props.append(properties.TextProperty('email', user.email))
+        props.append(properties.ListProperty(
+            'roles', [properties.TextProperty('roles', x)
+                      for x in user.roles]))
+        return actions.CreateAction(action_id, 'user', props)
+
+    def _create_user_config(self, setup_file, action_ids, user):
+        action_id = 'config-%s' % action_ids[user]
+        return actions.CreateAction(action_id, 'user-config', [])
 
     def _update_view(self, setup_file, action_ids, view):
         references = []
-        for name in view.get('lanes', []):
+        for name in view.lanes:
             lane = [x for x in setup_file.lanes.itervalues()
-                    if x['name'] == name][0]
-            action_id = action_ids[tuple(lane)]
+                    if x.name == name][0]
+            action_id = action_ids[lane]
             references.append(properties.ReferenceProperty(
                 'lanes', {'action': action_id}))
 
+        action_id = action_ids[view]
+        props = [properties.ListProperty('lanes', references)]
         return actions.UpdateAction(
-            'update-%s' % action_ids[tuple(view)],
-            None, action_ids[tuple(view)], [
-                properties.ListProperty('lanes', references)
-                ])
+            'update%s' % action_id, None, action_id, props)
 
     def _update_lane(self, setup_file, action_ids, lane):
         views = [x for x in setup_file.views.itervalues()
-                 if x.get('lanes', []) and lane['name'] in x['lanes']]
+                 if x.lanes and lane.name in x.lanes]
 
         references = []
         for view in views:
-            action_id = action_ids[tuple(view)]
+            action_id = action_ids[view]
             references.append(properties.ReferenceProperty(
                 'views', {'action': action_id}))
 
+        action_id = action_ids[lane]
+        props = [properties.ListProperty('views', references)]
         return actions.UpdateAction(
-            'update-%s' % action_ids[tuple(lane)],
-            None, action_ids[tuple(lane)], [
-                properties.ListProperty('views', references)
-                ])
+            'update-%s' % action_id, None, action_id, props)
+
+    def _update_user(self, setup_file, action_ids, user):
+        action_id = action_ids[user]
+        config_action_id = 'config-%s' % action_id
+        props = [properties.ReferenceProperty(
+            'config', {'action': config_action_id})]
+        return actions.UpdateAction(
+            'update-%s' % action_id, None, action_id, props)
+
+    def _update_user_config(self, setup_file, action_ids, user):
+        user_action_id = action_ids[user]
+        action_id = 'config-%s' % user_action_id
+        props = [properties.ReferenceProperty(
+            'user', {'action': user_action_id})]
+        return actions.UpdateAction(
+            'update-%s' % action_id, None, action_id, props)
