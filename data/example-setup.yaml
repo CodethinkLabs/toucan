@@ -17,8 +17,7 @@ lanes:
     description: Completed and reviewed tasks.
 views:
   - name: Default
-    description: >
-        Default view showing all lanes of the board.
+    description: Default view showing all lanes of the board.
     lanes:
       - Worklist
       - Backlog

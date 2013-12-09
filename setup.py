@@ -66,7 +66,6 @@ class Check(Command):
 
         suites = {
             'cli': ('local',),
-            'web': ('local',),
         }
 
         for suite, locations in suites.iteritems():
@@ -103,6 +102,7 @@ class Check(Command):
                  '--env=TEST_REPO_BASE_URL=%s' % self._test_repo_base_url(),
                  '--env=LOCATION=%s' % location,
                  '--env=API=%s' % suite,
+                 '--env=PYTHONPATH=%s' % os.environ.get('PYTHONPATH', ''),
                  '-s', os.path.join(yarn_dir, 'implementations', 'helpers.sh')]
                 + filenames)
 

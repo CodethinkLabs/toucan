@@ -1,0 +1,603 @@
+Set up new Toucan boards
+========================
+
+Create a board with a single view and three lanes
+-------------------------------------------------
+
+    SCENARIO create a board with a single view and lane
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of lanes in the setup file
+    AND      a lane "Backlog" with the description "Next tasks" in the setup file
+    AND      a lane "Doing" with the description "Current tasks" in the setup file
+    AND      a lane "Done" with the description "Completed tasks" in the setup file
+    AND      a list of views in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+    AND      a list of lanes in the view in the setup file
+    AND      this view includes the lane "Backlog" in the setup file
+    AND      this view includes the lane "Doing" in the setup file
+    AND      this view includes the lane "Done" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Test user" in the setup file
+    AND      this user has the email address "test-user@project.org" in the setup file
+    AND      this user has the role "admin" in the setup file
+
+    WHEN     running "toucan setup"
+
+    THEN     the board directory is a non-bare git repository
+    AND      the board repository has exactly 2 commits in "master"
+
+    AND      the board uses the service name "test-board"
+    AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+    AND      the board has the name "Test Board"
+    AND      the board has the description "This is a test board."
+
+    AND      the board has exactly 3 lanes
+
+    AND      the board has a lane "Backlog"
+    AND      the lane "Backlog" has the description "Next tasks"
+    AND      the board has a lane "Doing"
+    AND      the lane "Doing" has the description "Current tasks"
+    AND      the board has a lane "Done"
+    AND      the lane "Done" has the description "Completed tasks"
+
+    AND      the board has exactly 1 view
+
+    AND      the board has a view "Default"
+    AND      the view "Default" has the description "Default view"
+    AND      the view "Default" includes exactly 3 lanes
+    AND      the view "Default" includes the lane "Backlog"
+    AND      the view "Default" includes the lane "Doing"
+    AND      the view "Default" includes the lane "Done"
+
+    AND      the board has exactly 1 user
+
+    AND      the board has a user named "Test user"
+    AND      the user "Test user" has the email address "test-user@project.org"
+    AND      the user "Test user" has exactly 1 role
+    AND      the user "Test user" has the role "admin"
+
+Create a board with a two views view, four lanes and two users
+--------------------------------------------------------------
+
+    SCENARIO create a board with two views, four lanes and two users
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of lanes in the setup file
+    AND      a lane "Backlog" with the description "Next tasks" in the setup file
+    AND      a lane "Doing" with the description "Current tasks" in the setup file
+    AND      a lane "Review" with the description "Tasks pending review" in the setup file
+    AND      a lane "Done" with the description "Completed tasks" in the setup file
+    AND      a list of views in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+    AND      a list of lanes in the view in the setup file
+    AND      this view includes the lane "Backlog" in the setup file
+    AND      this view includes the lane "Doing" in the setup file
+    AND      this view includes the lane "Review" in the setup file
+    AND      a view "Review" with the description "Review view" in the setup file
+    AND      a list of lanes in the view in the setup file
+    AND      this view includes the lane "Review" in the setup file
+    AND      this view includes the lane "Done" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Developer" in the setup file
+    AND      this user has the email address "developer@project.org" in the setup file
+    AND      this user has the role "admin" in the setup file
+    AND      a user with the name "Reviewer" in the setup file
+    AND      this user has the email address "reviewer@project.org" in the setup file
+    AND      this user has the role "writer" in the setup file
+
+    WHEN     running "toucan setup"
+
+    THEN     the board directory is a non-bare git repository
+    AND      the board repository has exactly 2 commits in "master"
+
+    AND      the board uses the service name "test-board"
+    AND      the board uses the schema name "org.consonant-project.toucan.schema.0"
+    AND      the board has the name "Test Board"
+    AND      the board has the description "This is a test board."
+
+    AND      the board has exactly 4 lanes
+
+    AND      the board has a lane "Backlog"
+    AND      the lane "Backlog" has the description "Next tasks"
+    AND      the board has a lane "Doing"
+    AND      the lane "Doing" has the description "Current tasks"
+    AND      the board has a lane "Review"
+    AND      the lane "Review" has the description "Tasks pending review"
+    AND      the board has a lane "Done"
+    AND      the lane "Done" has the description "Completed tasks"
+
+    AND      the board has exactly 2 views
+
+    AND      the board has a view "Default"
+    AND      the view "Default" has the description "Default view"
+    AND      the view "Default" includes exactly 3 lanes
+    AND      the view "Default" includes the lane "Backlog"
+    AND      the view "Default" includes the lane "Doing"
+    AND      the view "Default" includes the lane "Review"
+
+    AND      the board has a view "Review"
+    AND      the view "Review" has the description "Review view"
+    AND      the view "Review" includes exactly 2 lanes
+    AND      the view "Review" includes the lane "Review"
+    AND      the view "Review" includes the lane "Done"
+
+    AND      the board has exactly 2 users
+
+    AND      the board has a user named "Developer"
+    AND      the user "Developer" has the email address "developer@project.org"
+    AND      the user "Developer" has exactly 1 role
+    AND      the user "Developer" has the role "admin"
+
+    AND      the board has a user named "Reviewer"
+    AND      the user "Reviewer" has the email address "reviewer@project.org"
+    AND      the user "Reviewer" has exactly 1 role
+    AND      the user "Reviewer" has the role "writer"
+
+Fail to create a board without a service name
+---------------------------------------------
+
+    SCENARIO fail to create a board without a service name
+
+    GIVEN    a setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines no service name"
+
+Fail to create a board with a non-string service name
+-----------------------------------------------------
+
+    SCENARIO fail to create a board with a non-string service name
+
+    GIVEN    a setup file
+    AND      a service name 512 in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string service name"
+
+Fail to create a board with an invalid service name
+---------------------------------------------------
+
+    SCENARIO fail to create a board with an invalid service name
+
+    GIVEN    a setup file
+    AND      a service name "+++!!+++" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines an invalid service name"
+
+Fail to create a board without a schema name
+---------------------------------------------
+
+    SCENARIO fail to create a board without a schema name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines no schema name"
+
+Fail to create a board with a non-string schema name
+----------------------------------------------------
+
+    SCENARIO fail to create a board with a non-string schema name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name 23 in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string schema name"
+
+Fail to create a board with an invalid schema name
+--------------------------------------------------
+
+    SCENARIO fail to create a board with an invalid schema name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "////////" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines an invalid schema name"
+
+Fail to create a board with no board info
+-----------------------------------------
+
+    SCENARIO fail to create a board with no board info
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines no board info"
+
+Fail to create a board with a non-string board name
+---------------------------------------------------
+
+    SCENARIO fail to create a board with a non-string board name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name 12345 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string board name"
+
+Fail to create a board with a non-string board description
+----------------------------------------------------------
+
+    SCENARIO fail to create a board with a non-string board description
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test board" in the setup file
+    AND      a board description 2395 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string board description"
+
+Fail to create a board with a view without a name
+-------------------------------------------------
+
+    SCENARIO fail to create a board with a view without a name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of views in the setup file
+    AND      a view without a name and with a description "Default view" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a view without a name"
+
+Fail to create a board with a view with a non-string name
+---------------------------------------------------------
+
+    SCENARIO fail to create a board with a view with a non-string name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of views in the setup file
+    AND      a view 12345 with the description "Default view" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string view name"
+
+Fail to create a board with a view with a non-string description
+----------------------------------------------------------------
+
+    SCENARIO fail to create a board with a view with a non-string description
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of views in the setup file
+    AND      a view "Default" with the description 12345 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string view description"
+
+Fail to create a board with a view with no lanes
+------------------------------------------------
+
+    SCENARIO fail to create a board with a view with no lanes
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of views in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a view with no lanes"
+
+Fail to create a board with a view with a non-string lane
+---------------------------------------------------------
+
+    SCENARIO fail to create a board with a view with a non-string lane
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of views in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+    AND      a list of lanes in the view in the setup file
+    AND      this view includes the lane 12345 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a view with a non-string lane name reference"
+
+Fail to create a board with a view that refers to a non-existent lane
+---------------------------------------------------------------------
+
+    SCENARIO fail to create a board with a view that refers to a non-existent lane
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of views in the setup file
+    AND      a view "Default" with the description "Default view" in the setup file
+    AND      a list of lanes in the view in the setup file
+    AND      this view includes the lane "Nonexistent" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a view that refers to a non-existent lane"
+
+Fail to create a board with a lane without a name
+-------------------------------------------------
+
+    SCENARIO fail to create a board with a lane without a name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of lanes in the setup file
+    AND      a lane without a name and with a description "Completed tasks" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a lane without a name"
+
+Fail to create a board with a lane with a non-string name
+---------------------------------------------------------
+
+    SCENARIO fail to create a board with a lane with a non-string name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of lanes in the setup file
+    AND      a lane 12345 with the description "Completed tasks" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string lane name"
+
+Fail to create a board with a lane with a non-string description
+----------------------------------------------------------------
+
+    SCENARIO fail to create a board with a lane with a non-string description
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a board name "Test Board" in the setup file
+    AND      a board description "This is a test board." in the setup file
+    AND      a list of lanes in the setup file
+    AND      a lane "Done" with the description 12345 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string lane description"
+
+Fail to create a board with no users
+------------------------------------
+
+    SCENARIO fail to create a board with a lane with two duplicate lanes
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines no users"
+
+Fail to create a board with a user without a name
+-------------------------------------------------
+
+    SCENARIO fail to create a board with a user without a name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user without a name and with an email address "foo@bar.org"
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a user without a name"
+
+Fail to create a board with a user with a non-string name
+---------------------------------------------------------
+
+    SCENARIO fail to create a board with a user with a non-string name
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name 12345 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string user name"
+
+Fail to create a board with a user with a non-string name
+---------------------------------------------------------
+
+    SCENARIO fail to create a board with a user with a non-string email
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Developer" in the setup file
+    AND      this user has the email address 5.0 in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a non-string user email"
+
+Fail to create a board with a user with no roles
+------------------------------------------------
+
+    SCENARIO fail to create a board with a user with no roles
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Developer" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a user with no roles"
+
+Fail to create a board with a user without an email address
+-----------------------------------------------------------
+
+    SCENARIO fail to create a board with a user without an email address
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Developer" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines a user without an email address"
+
+Fail to create a board with two users with duplicate email addresses
+--------------------------------------------------------------------
+
+    SCENARIO fail to create a board with two users with duplicate email addresses
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Developer" in the setup file
+    AND      this user has the email address "developer@project.org" in the setup file
+    AND      a user with the name "Reviewer" in the setup file
+    AND      this user has the email address "developer@project.org" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines 2 users with the same email address"
+
+Fail to create a board with no admin user
+-----------------------------------------
+
+    SCENARIO fail to create a board with no admin user
+
+    GIVEN    a setup file
+    AND      a service name "test-board" in the setup file
+    AND      a schema name "org.consonant-project.toucan.schema.0" in the setup file
+    AND      a list of users in the setup file
+    AND      a user with the name "Developer" in the setup file
+    AND      this user has the email address "developer@project.org" in the setup file
+
+    WHEN     running "toucan setup" against the invalid setup file
+
+    THEN     this fails
+    AND      a SetupParserError is thrown
+    AND      the error output includes "Setup file defines no users with the role "admin""
