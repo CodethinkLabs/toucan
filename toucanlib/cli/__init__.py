@@ -19,4 +19,6 @@
 
 import apps
 import commands
+import names
+import rendering
 import setup

@@ -18,8 +18,10 @@
 
 
 import cliapp
+import consonant
 import os
 import pygit2
+import sys
 
 import toucanlib
 
@@ -53,3 +55,31 @@ class SetupCommand(object):
         # perform the actual board setup
         setup = toucanlib.cli.setup.SetupRunner()
         setup.run(repo, setup_file)
+
+
+class ListCommand(object):
+
+    """Command to list objects in a Toucan board."""
+
+    def __init__(self, app, service_url, patterns):
+        self.app = app
+        self.service_url = service_url
+        self.patterns = patterns
+
+    def run(self):
+        """List objects in the Toucan board."""
+
+        # obtain a Consonant service for the service URL
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # resolve master into its latest commit
+        commit = service.refs('master').head
+
+        # resolve input patterns into objects
+        resolver = toucanlib.cli.names.NameResolver(service, commit)
+        objects = resolver.resolve_patterns(self.patterns, None)
+
+        # render objects to the standard output
+        renderer = toucanlib.cli.rendering.ListRenderer(service)
+        renderer.render(sys.stdout, objects)
