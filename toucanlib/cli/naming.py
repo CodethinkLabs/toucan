@@ -14,10 +14,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""The Toucan module holding the command line interface implementation."""
-
-
-import apps
-import commands
-import naming
-import setup
+"""Generate user-friendly object names and resolve them back into objects."""

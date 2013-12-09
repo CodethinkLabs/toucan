@@ -53,3 +53,18 @@ class SetupCommand(object):
         # perform the actual board setup
         setup = toucanlib.cli.setup.SetupRunner()
         setup.run(repo, setup_file)
+
+
+class ListCommand(object):
+
+    """Command to list objects in a Toucan board."""
+
+    def __init__(self, app, service_url, patterns):
+        self.app = app
+        self.service_url = service_url
+        self.patterns = patterns
+
+    def run(self):
+        """List objects in the Toucan board."""
+
+        pass

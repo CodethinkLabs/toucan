@@ -38,3 +38,13 @@ class Toucan(cliapp.Application):
 
         cmd = toucanlib.cli.commands.SetupCommand(self, setup_file, target_dir)
         cmd.run()
+
+    def cmd_list(self, args):
+        """List objects in a Toucan board."""
+
+        if len(args) < 2:
+            raise cliapp.AppException(
+                'Usage: toucan list BOARD PATTERN [PATTERN ...]')
+
+        cmd = toucanlib.cli.commands.ListCommand(self, args[0], args[1:])
+        cmd.run()
