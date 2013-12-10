@@ -18,8 +18,10 @@
 
 
 import cliapp
+import consonant
 import os
 import pygit2
+import sys
 
 import toucanlib
 
@@ -67,4 +69,12 @@ class ListCommand(object):
     def run(self):
         """List objects in the Toucan board."""
 
-        pass
+        # obtain a Consonant service for the service URL
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # resolve input patterns into objects
+        resolver = toucanlib.cli.names.NameResolver(service)
+        objects = resolver.resolve_patterns(self.patterns, None)
+
+        print objects
