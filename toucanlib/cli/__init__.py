@@ -19,5 +19,5 @@
 
 import apps
 import commands
-import naming
+import names
 import setup
