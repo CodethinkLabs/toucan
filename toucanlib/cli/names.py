@@ -78,29 +78,19 @@ class NameResolver(object):
         return result
 
     def _resolve_patterns_for_object(self, patterns, obj):
-        print 'resolve patterns for object %s (%s)' % (obj, obj.klass.name)
-
         result = set()
 
         names = self.name_generator.short_names(obj)
         names.update(self.name_generator.long_names(obj))
 
-        print '    names: %s' % ', '.join(sorted(names, key=len))
-
         for pattern in patterns:
             if any(fnmatch.fnmatch(name, pattern) for name in names):
-                print '    OK'
                 result.add(obj)
 
         for child_names, child in self._get_children(obj, names):
-            print '    child %s (%s)' % (child, child.klass.name)
-            print '        names: %s' % \
-                ', '.join(sorted(child_names, key=len))
             for pattern in patterns:
                 if any(fnmatch.fnmatch(name, pattern) for name in child_names):
                     result.add(child)
-
-        print
 
         return result
 
@@ -108,77 +98,75 @@ class NameResolver(object):
         func_name = '_get_%s_children' % obj.klass.name.replace('-', '_')
         return getattr(self, func_name)(obj, names)
 
+    def _resolve_references(self, obj, obj_names, prop_name):
+        references = obj.properties.get(prop_name, None)
+        result = set()
+        if references:
+            for reference in references.value:
+                other = self.service.resolve_reference(reference.value)
+                other_names = self.name_generator.short_names(other)
+                other_names = [
+                    '%s/%s/%s' % (n1, prop_name, n2)
+                    for n1, n2 in itertools.product(obj_names, other_names)
+                    ]
+                result.add((tuple(other_names), other))
+        return result
+
+    def _resolve_reference(self, obj, obj_names, prop_name, short_name):
+        reference = obj.properties.get(prop_name, None)
+        other = self.service.resolve_reference(reference.value)
+        other_names = ['%s/%s' % (name, short_name) for name in obj_names]
+        return tuple(other_names), other
+
     def _get_info_children(self, obj, names):
-        return []
+        return set()
 
     def _get_view_children(self, view, view_names):
-        # add lanes in the view
-        references = view.properties.get('lanes', None)
-        if references:
-            for reference in references.value:
-                 lane = self.service.resolve_reference(reference.value)
-                 lane_names = self.name_generator.short_names(lane)
-                 child_names = [
-                    '%s/lanes/%s' % (v, l)
-                    for v, l in itertools.product(view_names, lane_names)
-                    ]
-                 yield child_names, lane
+        return self._resolve_references(view, view_names, 'lanes')
 
     def _get_lane_children(self, lane, lane_names):
-        # add views for the lane
-        references = lane.properties.get('views', None)
-        if references:
-            for reference in references.value:
-                view = self.service.resolve_reference(reference.value)
-                view_names = self.name_generator.short_names(view)
-                child_names = [
-                    '%s/views/%s' % (l, v)
-                    for l, v in itertools.product(lane_names, view_names)
-                    ]
-                yield child_names, view
-
-        # add cards in the lane
-        references = lane.properties.get('cards', None)
-        if references:
-            for reference in references.value:
-                card = self.service.resolve_reference(reference.value)
-                card_names = self.name_generator.short_names(card)
-                child_names = [
-                    '%s/cards/%s' % (l, c)
-                    for l, c in itertools.product(lane_names, card_names)
-                    ]
-                yield child_names, card
+        result = set()
+        # <lane>/views/<name>
+        result.update(self._resolve_references(lane, lane_names, 'views'))
+        # <lane>/cards/<name>
+        result.update(self._resolve_references(lane, lane_names, 'cards'))
+        return result
 
     def _get_card_children(self, card, card_names):
-        # <card>/lane
-        # <card>/milestone
-        # <card>/reason
-        # <card>/assignees/<name>
-        # <card>/comments/<index>
-        pass
+        result = set()
+        # TODO <card>/lane
+        # TODO <card>/milestone
+        # TODO <card>/reason
+        result.update(self._resolve_references(card, card_names, 'assignees'))
+        result.update(self._resolve_references(card, card_names, 'comments'))
+        return result
 
     def _get_user_config_children(self, config, config_names):
-        # <config>/user
-        return []
+        result = set()
+        result.add(self._resolve_reference(
+            config, config_names, 'user', 'user'))
+        return result
 
     def _get_user_children(self, user, user_names):
-        # <user>/config
-        return []
+        result = set()
+        result.add(self._resolve_reference(
+            user, user_names, 'config', 'config'))
+        return result
 
     def _get_reason_children(self, reason, reason_names):
         # ...?
-        return []
+        return set()
 
     def _get_milestone_children(self, milestone, milestone_names):
         # ...?
-        return []
+        return set()
 
     def _get_comment_children(self, commit, comment_names):
-        # <comment>/card
-        # <comment>/author
-        # <comment>/attachment
-        return []
+        # TODO <comment>/card
+        # TODO <comment>/author
+        # TODO <comment>/attachment
+        return set()
 
     def _get_attachment_children(self, attachment, attachment_names):
-        # <attachment>/comment
-        return []
+        # TODO <attachment>/comment
+        return set()
