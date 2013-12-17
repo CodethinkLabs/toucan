@@ -74,7 +74,7 @@ class ListCommand(object):
         service = factory.service(self.service_url)
 
         # resolve master into its latest commit
-        commit = service.refs('master').head
+        commit = service.ref('master').head
 
         # resolve input patterns into objects
         resolver = toucanlib.cli.names.NameResolver(service, commit)
