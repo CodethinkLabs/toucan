@@ -1,0 +1,35 @@
+Miscellaneous
+=============
+
+Check whether a command has failed
+----------------------------------
+
+    IMPLEMENTS THEN this fails
+
+    test "$(cat $DATADIR/exit-code | xargs echo -n)" != "0"
+
+Check whether a specific exception is thrown
+--------------------------------------------
+
+    IMPLEMENTS THEN a (.+) is thrown
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    grep "^[a-zA-Z0-9_\.: ]*$MATCH_1:" $DATADIR/stderr
+
+Check whether the error output includes an expected expression
+--------------------------------------------------------------
+
+    IMPLEMENTS THEN the error output includes "(.+)"
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    grep "$MATCH_1" $DATADIR/stderr
+
+Check whether standard output is empty
+--------------------------------------
+
+    IMPLEMENTS THEN the output is empty
+
+    characters=$(cat $DATADIR/stdout | wc -c)
+    test $characters -eq 0

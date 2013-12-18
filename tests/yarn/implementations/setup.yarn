@@ -329,9 +329,7 @@ Check whether a view includes a lane with a given name
 
     matches = []
     for reference in view.properties['lanes'].value:
-        print reference
-        print reference.value
-        matches.extend(l for l in lanes if l.uuid == reference.value['uuid'])
+        matches.extend(l for l in lanes if l.uuid == reference.value.uuid)
     assert len(matches) > 0
     EOF
 

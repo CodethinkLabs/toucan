@@ -1,0 +1,64 @@
+List objects in Toucan boards
+=============================
+
+Set up a board
+--------------
+
+    IMPLEMENTS GIVEN a board with two views, four lanes and two users
+
+    cat <<-EOF > "$DATADIR/setup.yaml"
+    name: example.board
+    schema: org.consonant-project.toucan.schema.0
+    info:
+        name: Example board
+        description: This is an example board
+    lanes:
+      - name: Backlog
+        description: Backlog lane
+      - name: Doing
+        description: Doing lane
+      - name: Review
+        description: Review lane
+      - name: Done
+        description: Done lane
+    views:
+      - name: Default
+        description: Default view
+        lanes:
+          - Backlog
+          - Doing
+          - Review
+          - Done
+      - name: Secondary
+        description: Secondary view
+        lanes:
+          - Backlog
+          - Doing
+    users:
+      - name: Test User
+        email: test@test.org
+        roles:
+          - admin
+    EOF
+
+    run_toucan_cli <<-EOF
+    setup "$DATADIR/setup.yaml" "$DATADIR/board"
+    EOF
+
+Run toucan list
+---------------
+
+    IMPLEMENTS WHEN running "toucan list ?(.*)"
+
+    run_toucan_cli <<-EOF
+    list "$DATADIR/board" $MATCH_1
+    EOF
+
+Count objects in the list output
+--------------------------------
+
+    IMPLEMENTS THEN the output includes ([0-9]+) (.+)s
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    count=$(grep "^$MATCH_2" "$DATADIR/stdout" | wc -l)
+    test $MATCH_1 -eq $count
