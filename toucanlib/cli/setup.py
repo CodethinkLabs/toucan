@@ -23,8 +23,8 @@ import time
 import yaml
 
 from consonant.store import properties
-from consonant.transaction import actions, transactions
-from consonant.util import expressions, git
+from consonant.transaction import actions, transaction
+from consonant.util import expressions, gitcli
 from consonant.util.phase import Phase
 
 
@@ -406,8 +406,8 @@ class SetupRunner(object):
         """Perform the board setup against a repository and setup file."""
 
         author = pygit2.Signature(
-            git.subcommand(repo, ['config', 'user.name']),
-            git.subcommand(repo, ['config', 'user.email']))
+            gitcli.subcommand(repo, ['config', 'user.name']),
+            gitcli.subcommand(repo, ['config', 'user.email']))
 
         self._create_initial_commit(repo, setup_file, author)
         self._populate_store(repo, setup_file, author)
@@ -462,11 +462,11 @@ class SetupRunner(object):
 
         # create a transaction to populate the store with the initial
         # board info, views, lanes and users
-        transaction = transactions.Transaction(
+        t = transaction.Transaction(
             [begin_action] + create_actions + [commit_action])
 
         # apply the transaction
-        store.apply_transaction(transaction)
+        store.apply_transaction(t)
 
     def _create_objects(self, setup_file, action_ids):
         actions = []
