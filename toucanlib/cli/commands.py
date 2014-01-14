@@ -82,4 +82,37 @@ class ListCommand(object):
 
         # render objects to the standard output
         renderer = toucanlib.cli.rendering.ListRenderer(service)
-        renderer.render(sys.stdout, objects)
+        renderer.render(self.app.output, objects)
+
+
+class ShowCommand(object):
+
+    """Command to show information about objects in a Toucan board. """
+
+    def __init__(self, app, service_url, patterns):
+        self.app = app
+        self.service_url = service_url
+        self.patterns = patterns
+
+    def run(self):
+        """Show detailed information about objects."""
+
+        # Get a consonant service for the provided URL
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # Get the latest commit from this service
+        commit = service.ref('master').head
+
+        # resolve the input patterns into object
+        resolver = toucanlib.cli.names.NameResolver(service, commit)
+        objects = resolver.resolve_patterns(self.patterns, None)
+
+        # render the objects to stdout
+        renderer = toucanlib.cli.rendering.ShowRenderer(service, commit)
+        renderer.render(self.app.output, objects)
+
+        # if there were no objects, inform the user
+        if not objects:
+            self.app.output.write(
+                    'No objects found matching %s.\n' % self.patterns)
