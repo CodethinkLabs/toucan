@@ -187,3 +187,15 @@ class ListRenderer(object):
 
     def _render_user_config_group(self, stream, objects):
         return UserConfigListRenderer(self.service).render(stream, objects)
+
+class ObjectClassShowRenderer(object):
+
+    """Render the objects of a class to a text stream."""
+
+    def __init__(self, service):
+        self.service = service
+
+    def render(self, stream, objects):
+        """Render a list of objects to a text stream."""
+
+        raise NotImplementedError
