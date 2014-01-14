@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Codethink Limited.
+# Copyright (C) 2013-2014 Codethink Limited.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -31,13 +31,13 @@ class SetupCommand(object):
     """Command to create a new Toucan board from a setup file."""
 
     def __init__(self, app, setup_file, target_dir):
+        """Initialise a SetupCommand."""
         self.app = app
         self.setup_filename = setup_file
         self.target_dir = target_dir
 
     def run(self):
         """Perform the board setup."""
-
         # parse the setup file
         parser = toucanlib.cli.setup.SetupParser()
         setup_file = parser.parse(open(self.setup_filename, 'r'))
@@ -62,13 +62,13 @@ class ListCommand(object):
     """Command to list objects in a Toucan board."""
 
     def __init__(self, app, service_url, patterns):
+        """Initialise a ListCommand."""
         self.app = app
         self.service_url = service_url
         self.patterns = patterns
 
     def run(self):
         """List objects in the Toucan board."""
-
         # obtain a Consonant service for the service URL
         factory = consonant.service.factories.ServiceFactory()
         service = factory.service(self.service_url)
@@ -82,4 +82,37 @@ class ListCommand(object):
 
         # render objects to the standard output
         renderer = toucanlib.cli.rendering.ListRenderer(service)
-        renderer.render(sys.stdout, objects)
+        renderer.render(self.app.output, objects)
+
+
+class ShowCommand(object):
+
+    """Command to show information about objects in a Toucan board. """
+
+    def __init__(self, app, service_url, patterns):
+        """Initialise a ShowCommand."""
+        self.app = app
+        self.service_url = service_url
+        self.patterns = patterns
+
+    def run(self):
+        """Show detailed information about objects."""
+        # Get a consonant service for the provided URL
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # Get the latest commit from this service
+        commit = service.ref('master').head
+
+        # resolve the input patterns into object
+        resolver = toucanlib.cli.names.NameResolver(service, commit)
+        objects = resolver.resolve_patterns(self.patterns, None)
+
+        # render the objects to stdout
+        renderer = toucanlib.cli.rendering.ShowRenderer(service, commit)
+        renderer.render(self.app.output, objects)
+
+        # if there were no objects, inform the user
+        if not objects:
+            self.app.output.write(
+                'No objects found matching %s.\n' % self.patterns)
