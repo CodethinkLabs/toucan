@@ -51,3 +51,19 @@ class Toucan(cliapp.Application):
 
         cmd = toucanlib.cli.commands.ListCommand(self, args[0], args[1:])
         cmd.run()
+
+    def cmd_show(self, args):
+        """Show detailed information about objects in a Toucan board."""
+
+        # If there is no board defined then raise an exception
+        if len(args) < 1:
+            raise cliapp.AppException(
+                'Usage: toucan show BOARD [PATTERN ...]')
+
+        # If no pattern is specified then show the board details
+        if len(args) == 1:
+            args.append('info/*')
+
+        # Run show command
+        cmd = toucanlib.cli.commands.ShowCommand(self, args[0], args[1:])
+        cmd.run()
