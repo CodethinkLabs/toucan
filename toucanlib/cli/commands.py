@@ -111,3 +111,7 @@ class ShowCommand(object):
         # render the objects to stdout
         renderer = toucanlib.cli.rendering.ShowRenderer(service)
         renderer.render(sys.stdout, objects)
+        
+        # if there were no objects, inform the user
+        if (len(objects) == 0):
+            sys.stdout.write('No matching objects found.\n')
