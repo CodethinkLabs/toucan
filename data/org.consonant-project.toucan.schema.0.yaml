@@ -7,6 +7,13 @@ classes:
             description:
                 type: text
                 optional: true
+            views:
+                type: list
+                elements:
+                  type: reference
+                  class: view
+                  bidirectional: board
+                optional: true
     view:
         properties:
             name:
@@ -20,6 +27,11 @@ classes:
                   type: reference
                   class: lane
                   bidirectional: views
+            board:
+                type: reference
+                class: info
+                bidirectional: views
+                optional: true
     lane:
         properties:
             views:
