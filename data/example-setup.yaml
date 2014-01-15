@@ -3,13 +3,20 @@ schema: org.consonant-project.toucan.schema.0
 info:
     name: Toucan board
     description: This is an example Toucan board.
+    views:
+      - Default
+      - Developer
 lanes:
   - name: Worklist
     description: Tasks to be worked on in the future.
   - name: Backlog
     description: Tasks to be worked on next.
+    cards:
+      - 1
   - name: Doing
     description: Tasks currently being worked on.
+    cards:
+      - 2
   - name: Review
     description: >
       Tasks pending review or currently being reviewed.
@@ -24,8 +31,29 @@ views:
       - Doing
       - Review
       - Done
+    board: Toucan board
+  - name: Developer
+    description: View for developers, showing work they need to do.
+    lanes:
+      - Worklist
+      - Backlog
+      - Doing
+    board: Toucan board
 users:
   - name: Jannis Pohlmann
     email: jannis.pohlmann@codethink.co.uk
     roles:
       - admin
+cards:
+  - number: 1
+    creator: Jannis Pohlmann
+    title: Implement feature XYZ, as required for foo
+    lane: Backlog
+    reason: XYZ
+  - number: 2
+    creator: Jannis Pohlmann
+    title: Fix that nasty bug
+    lane: Doing
+    reason: XYZ
+reasons:
+  - name: XYZ
