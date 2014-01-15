@@ -107,11 +107,7 @@ class ShowCommand(object):
         # resolve the input patterns into object
         resolver = toucanlib.cli.names.NameResolver(service, commit)
         objects = resolver.resolve_patterns(self.patterns, None)
-
+        
         # render the objects to stdout
-        # TODO: Implement rendering.ShowRenderer
-        # renderer = toucanlib.cli.rendering.ShowRenderer(service)
-        # renderer.render(sys.stdout, objects)
-
-        # For now, show that objects has been populated.
-        print len(objects)
+        renderer = toucanlib.cli.rendering.ShowRenderer(service)
+        renderer.render(sys.stdout, objects)
