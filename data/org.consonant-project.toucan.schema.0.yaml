@@ -7,6 +7,12 @@ classes:
             description:
                 type: text
                 optional: true
+            views:
+                type: list
+                elements:
+                  type: reference
+                  class: view
+                optional: true
     view:
         properties:
             name:
@@ -52,9 +58,6 @@ classes:
                 optional: true
     card:
         properties:
-            number:
-                type: int
-                unique: true
             creator:
                 type: reference
                 class: user
@@ -91,6 +94,8 @@ classes:
                 optional: true
     reason:
         properties:
+            short-name:
+                type: text
             name:
                 type: text
             description:
@@ -105,6 +110,8 @@ classes:
                 optional: true
     milestone:
         properties:
+            short-name:
+                type: text
             name:
                 type: text
             description:
@@ -122,16 +129,6 @@ classes:
                 type: list
                 elements:
                     type: text
-            config:
-                type: reference
-                class: user-config
-                bidirectional: user
-    user-config:
-        properties:
-            user:
-                type: reference
-                class: user
-                bidirectional: config
             avatar:
                 type: raw
                 content-type-regex:
