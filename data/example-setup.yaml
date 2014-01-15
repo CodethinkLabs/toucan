@@ -8,8 +8,12 @@ lanes:
     description: Tasks to be worked on in the future.
   - name: Backlog
     description: Tasks to be worked on next.
+    cards:
+      - 0
   - name: Doing
     description: Tasks currently being worked on.
+    cards:
+      - 1
   - name: Review
     description: >
       Tasks pending review or currently being reviewed.
@@ -24,8 +28,50 @@ views:
       - Doing
       - Review
       - Done
+  - name: Developer
+    description: View for developers, showing work they need to do.
+    lanes:
+      - Worklist
+      - Backlog
+      - Doing
 users:
   - name: Jannis Pohlmann
     email: jannis.pohlmann@codethink.co.uk
     roles:
       - admin
+    default-view: Default
+    avatar: http://www.avatars.example/jannis.png
+cards:
+  - id: 0
+    creator: Jannis Pohlmann
+    title: Implement feature XYZ, as required for foo.
+    description: >
+      This is a really long title so I can test my wrapping. In fact, it could
+      even do with being even longer, what with me wanting to test a number of
+      lines being printed at once!
+    lane: Backlog
+    reason: XYZ
+    milestone: XYZ
+    assignees:
+      - Jannis Pohlmann
+    comments:
+      - 0
+  - id: 1
+    creator: Jannis Pohlmann
+    title: Fix that nasty bug
+    lane: Doing
+    reason: XYZ
+reasons:
+  - short-name: XYZ
+    name: XYZ - Implement feature XYZ
+milestones:
+  - short-name: XYZ
+    name: XYZ - Implement foo, via XYZ
+    deadline: 1389966514 +0000
+comments:
+  - id: 0
+    comment: >
+      This is an example comment. It is nice and long in order to check how the
+      text wrapping looks in toucan show.
+    author: Jannis Pohlmann
+    card: 0
