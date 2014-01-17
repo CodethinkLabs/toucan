@@ -60,9 +60,10 @@ class Lane(object):
 
     """A lane definition in a board setup file."""
 
-    def __init__(self, name, description):
+    def __init__(self, name, description, cards):
         self.name = name
         self.description = description
+        self.cards = cards
 
 
 class User(object):
@@ -75,16 +76,83 @@ class User(object):
         self.roles = roles
 
 
+class Card(object):
+
+    """A card definition in a board setup file."""
+
+    def __init__(self, identifier, title, creator, description,
+                 lane, reason, milestone, assignees, comments):
+        self.id = identifier
+        self.title = title
+        self.creator = creator
+        self.description = description
+        self.lane = lane
+        self.reason = reason
+        self.milestone = milestone
+        self.assignees = assignees
+        self.comments = comments
+
+
+class Reason(object):
+
+    """A reason definition in a board setup file."""
+
+    def __init__(self, short_name, name, description, work_items):
+        self.short_name = short_name
+        self.name = name
+        self.description = description
+        self.work_items = work_items
+
+
+class Milestone(object):
+
+    """A milestone definition in a board setup file."""
+
+    def __init__(self, short_name, name, description, deadline):
+        self.short_name = short_name
+        self.name = name
+        self.description = description
+        self.deadline = deadline
+
+
+class Comment(object):
+
+    """A comment definition in a board setup file."""
+
+    def __init__(self, identifier, content, author, attachment, card):
+        self.id = identifier
+        self.content = content
+        self.author = author
+        self.attachment = attachment
+        self.card = card
+
+
+class Attachment(object):
+
+    """An attachment definition in a board setup file."""
+
+    def __init__(self, name, comment):
+        self.name = name
+        self.comment = comment
+
+
 class SetupFile(object):
 
     """A Toucan board setup file."""
 
     def __init__(self):
+        # The setup file can define any of the following, so all of them
+        # should have the potential to be loaded.
         self.meta_data = None
         self.board_info = None
         self.views = {}
         self.lanes = {}
         self.users = {}
+        self.cards = {}
+        self.reasons = {}
+        self.milestones = {}
+        self.comments = {}
+        self.attachments = {}
 
 
 class SetupParserError(Exception):
@@ -119,6 +187,11 @@ class SetupParser(object):
                 self._validate_views(phase, data)
                 self._validate_lanes(phase, data)
                 self._validate_users(phase, data)
+                self._validate_cards(phase, data)
+                self._validate_reasons(phase, data)
+                self._validate_milestones(phase, data)
+                self._validate_comments(phase, data)
+                self._validate_attachments(phase, data)
 
         # phase 3: load the setup data into a SetupFile
         with Phase() as phase:
@@ -128,6 +201,12 @@ class SetupParser(object):
             self._load_views(phase, data, setup_file)
             self._load_lanes(phase, data, setup_file)
             self._load_users(phase, data, setup_file)
+            self._load_cards(phase, data, setup_file)
+            self._load_reasons(phase, data, setup_file)
+            self._load_milestones(phase, data, setup_file)
+            self._load_comments(phase, data, setup_file)
+            self._load_attachments(phase, data, setup_file)
+
             return setup_file
 
     def _validate_meta_data(self, phase, data):
@@ -289,6 +368,29 @@ class SetupParser(object):
                             'Setup file defines a non-string lane '
                             'description: %s' % lane['description']))
 
+                    if 'cards' in lane:
+                        if not isinstance(lane['cards'], list):
+                            phase.error(SetupParserError(
+                                'Setup file defines a lane with non-list '
+                                'cards property: %s' % lane['cards']))
+                        else:
+                            for card in lane['cards']:
+                                if not isinstance(card, int):
+                                    phase.error(SetupParserError(
+                                        'Setup file defines a comment with '
+                                        'non-int card reference: %s' % card))
+                                else:
+                                    cards = [x for x in data.get('cards', [])
+                                             if isinstance(x, dict)
+                                             and 'id' in x]
+                                    matches = [x for x in cards
+                                               if x['id'] in lane['cards']]
+                                    if not matches:
+                                        phase.error(SetupParserError(
+                                            'Setup file defines a lane '
+                                            'with non-existant card reference:'
+                                            ' %s' % card))
+
             # detect ambiguous lanes with the same name
             valid_lanes = [x for x in data['lanes']
                            if isinstance(x, dict) and 'name' in x]
@@ -309,7 +411,8 @@ class SetupParser(object):
         for lane in data['lanes']:
             setup_file.lanes[lane['name']] = Lane(
                 lane['name'],
-                lane.get('description', None))
+                lane.get('description', None),
+                lane.get('cards', []))
 
     def _validate_users(self, phase, data):
         if not 'users' in data:
@@ -397,6 +500,412 @@ class SetupParser(object):
                 user['email'],
                 user.get('roles', []))
 
+    def _validate_cards(self, phase, data):
+        if not 'cards' in data:
+            return
+
+        if not isinstance(data['cards'], list):
+            phase.error(SetupParserError(
+                'Setup file defines a non-list cards entry.'))
+        else:
+            for card in data['cards']:
+                if not isinstance(card, dict):
+                    phase.error(SetupParserError(
+                        'Setup file defines a non-dict card: %s' % card))
+                else:
+                    self._validate_card_id(phase, card)
+                    self._validate_card_title(phase, card)
+                    self._validate_card_creator(phase, card, data)
+                    self._validate_card_description(phase, card)
+                    self._validate_card_lane(phase, card, data)
+                    self._validate_card_milestone(phase, card, data)
+                    self._validate_card_reason(phase, card, data)
+                    self._validate_card_assignees(phase, card, data)
+
+    def _validate_card_id(self, phase, card):
+        if not 'id' in card:
+            phase.error(SetupParserError(
+                'Setup file defines a card without an id: %s' % card))
+        elif not isinstance(card['id'], int):
+            phase.error(SetupParserError(
+                'Setup file defines a card with non-int id: %s' % card['id']))
+
+    def _validate_card_title(self, phase, card):
+        # validate card title
+        if not 'title' in card:
+            phase.error(SetupParserError(
+                'Setup file defines a card without a title: %s' % card))
+        elif not isinstance(card['title'], basestring):
+            phase.error(SetupParserError(
+                'Setup file defines a card with non-string title: %s' %
+                card['title']))
+
+    def _validate_card_creator(self, phase, card, data):
+        # validate card creator
+        if not 'creator' in card:
+            phase.error(SetupParserError(
+                'Setup file defines a card without a creator: %s' % card))
+        elif not isinstance(card['creator'], basestring):
+            phase.error(SetupParserError(
+                'Setup file defines a card with non-string creator: %s' %
+                card['creator']))
+        else:
+            users = [x for x in data.get('users', [])
+                     if isinstance(x, dict) and 'name' in x]
+            matches = [x for x in users if x['name'] == card['creator']]
+            if not matches:
+                phase.error(SetupParserError(
+                    'Setup file defines a card that refers '
+                    'to a non-existent user: %s' % card))
+
+    def _validate_card_description(self, phase, card):
+        # validate card description
+        if 'description' in card and \
+                not isinstance(card['description'], basestring):
+            phase.error(SetupParserError(
+                'Setup file defines a card with non-string description: %s' %
+                card['description']))
+
+    def _validate_card_lane(self, phase, card, data):
+        # validate card lane
+        if not 'lane' in card:
+            phase.error(SetupParserError(
+                'Setup file defines a card without a lane: %s' % card))
+        elif not isinstance(card['lane'], basestring):
+            phase.error(SetupParserError(
+                'Setup file defines a card with non-string lane: %s' %
+                card['lane']))
+        else:
+            lanes = [x for x in data.get('lanes', [])
+                     if isinstance(x, dict) and 'name' in x]
+            matches = [x for x in lanes if x['name'] == card['lane']]
+            if not matches:
+                phase.error(SetupParserError(
+                    'Setup file defines a card that refers '
+                    'to a non-existent lane: %s' % card))
+
+    def _validate_card_milestone(self, phase, card, data):
+        # validate card milestone
+        if 'milestone' in card:
+            if not isinstance(card['milestone'], basestring):
+                phase.error(SetupParserError(
+                    'Setup file defines a card with non-string '
+                    'milestone reference: %s' % card['milestone']))
+            else:
+                milestones = [x for x in data.get('milestones', [])
+                              if isinstance(x, dict) and 'name' in x]
+                matches = [x for x in milestones
+                           if x['short-name'] == card['milestone']]
+                if not matches:
+                    phase.error(SetupParserError(
+                        'Setup file defines a card that refers '
+                        'to a non-existent milestone: %s' % card))
+
+    def _validate_card_reason(self, phase, card, data):
+        # validate card reason
+        if not 'reason' in card:
+            phase.error(SetupParserError(
+                'Setup file defines a card without a reason: %s' % card))
+        elif not isinstance(card['reason'], basestring):
+            phase.error(SetupParserError(
+                'Setup file defines a card with non-string '
+                'reason reference: %s' % card['reason']))
+        else:
+            reasons = [x for x in data.get('reasons', [])
+                       if isinstance(x, dict) and 'short-name' in x]
+            matches = [x for x in reasons if x['short-name'] == card['reason']]
+            if not matches:
+                phase.error(SetupParserError(
+                    'Setup file defines a card that refers '
+                    'to a non-existent reason: %s' % card))
+
+    def _validate_card_assignees(self, phase, card, data):
+        # validate card assignees
+        if 'assignees' in card:
+            if not isinstance(card['assignees'], list):
+                phase.error(SetupParserError(
+                    'Setup file defines a card with non-list '
+                    'assignees: %s' % card))
+            else:
+                for assignee in card['assignees']:
+                    if not isinstance(assignee, basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a card with '
+                            'non-string assignee: %s' % card))
+                    else:
+                        users = [x for x in data.get('users', [])
+                                 if isinstance(x, dict) and 'name' in x]
+                        matches = [x for x in users if x['name'] == assignee]
+                        if not matches:
+                            phase.error(SetupParserError(
+                                'Setup file defines a card that refers to '
+                                'a non-existent user: %s' % card))
+
+    def _load_cards(self, phase, data, setup_file):
+        if not 'cards' in data:
+            return
+        for card in data['cards']:
+            setup_file.cards[card['title']] = Card(
+                card['id'],
+                card['title'],
+                card['creator'],
+                card.get('description', None),
+                card['lane'],
+                card['reason'],
+                card.get('milestone', None),
+                card.get('assignees', []),
+                card.get('comments', []))
+
+    def _validate_reasons(self, phase, data):
+        if not 'reasons' in data:
+            return
+        if not isinstance(data['reasons'], list):
+            phase.error(SetupParserError(
+                'Setup file defines a non-list reasons entry.'))
+        else:
+            for reason in data['reasons']:
+                if not isinstance(reason, dict):
+                    phase.error(SetupParserError(
+                        'Setup file defines a non-dict reason: %s' % reason))
+                else:
+                    # validate short_name
+                    if not 'short-name' in reason:
+                        phase.error(SetupParserError(
+                            'Setup file defines a reason without a '
+                            'short-name: %s' % reason))
+                    elif not isinstance(reason['short-name'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a reason with non-string '
+                            'short_name: %s' % reason['short-name']))
+
+                    # validate name
+                    if not 'name' in reason:
+                        phase.error(SetupParserError(
+                            'Setup file defines a reason without a name: %s' %
+                            reason))
+                    elif not isinstance(reason['name'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a reason with non-string '
+                            'name: %s' % reason['name']))
+
+                    # validate description
+                    if 'description' in reason:
+                        if not isinstance(reason['description'], basestring):
+                            phase.error(SetupParserError(
+                                'Setup file defines a reason with non-string '
+                                'description: %s' % reason['description']))
+
+                    # validate work-items
+                    # TODO:
+                    #   These are references to an remote store, which is
+                    #   currently unsupported by python-consonant.
+
+    def _load_reasons(self, phase, data, setup_file):
+        if not 'reasons' in data:
+            return
+        for reason in data['reasons']:
+            setup_file.reasons[reason['name']] = Reason(
+                reason['short-name'],
+                reason['name'],
+                reason.get('description', None),
+                reason.get('work-items', []))
+
+    def _validate_milestones(self, phase, data):
+        if not 'milestones' in data:
+            return
+        if not isinstance(data['milestones'], list):
+            phase.error(SetupParserError(
+                'Setup file defines a non-list milestones entry.'))
+        else:
+            for milestone in data['milestones']:
+                if not isinstance(milestone, dict):
+                    phase.error(SetupParserError(
+                        'Setup file defines a non-dict milestone: %s' %
+                        milestone))
+                else:
+                    # validate short_name
+                    if not 'short-name' in milestone:
+                        phase.error(SetupParserError(
+                            'Setup file defines a milestone without a '
+                            'short-name: %s' % milestone))
+                    elif not isinstance(milestone['short-name'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a milestone with non-string '
+                            'short_name: %s' % milestone['short-name']))
+
+                    # validate name
+                    if not 'name' in milestone:
+                        phase.error(SetupParserError(
+                            'Setup file defines a milestone without a name: %s'
+                            % milestone))
+                    elif not isinstance(milestone['name'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a milestone with non-string '
+                            'name: %s' % milestone['name']))
+
+                    # validate description
+                    if 'description' in milestone:
+                        if not isinstance(
+                                milestone['description'], basestring):
+                            phase.error(SetupParserError(
+                                'Setup file defines a milestone with '
+                                'non-string'' description: %s'
+                                % milestone['description']))
+
+                    # validate deadline
+                    if not 'deadline' in milestone:
+                        phase.error(SetupParserError(
+                            'Setup file defines a milestone without a '
+                            'deadline: %s' % milestone))
+                    elif not isinstance(milestone['deadline'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a milestone with non-string '
+                            'deadline: %s' % milestone['deadline']))
+
+    def _load_milestones(self, phase, data, setup_file):
+        if not 'milestones' in data:
+            return
+        for milestone in data['milestones']:
+            setup_file.milestones[milestone['short-name']] = Milestone(
+                milestone['short-name'],
+                milestone['name'],
+                milestone.get('description', None),
+                milestone['deadline'])
+
+    def _validate_comments(self, phase, data):
+        if not 'comments' in data:
+            return
+        if not isinstance(data['comments'], list):
+            phase.error(SetupParserError(
+                'Setup file defines a non-list comments entry.'))
+        else:
+            for comment in data['comments']:
+                if not isinstance(comment, dict):
+                    phase.error(SetupParserError(
+                        'Setup file defines a non-dict comment: %s' % comment))
+                else:
+                    if not 'id' in comment:
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment without an id: %s' %
+                            comment))
+                    elif not isinstance(comment['id'], int):
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment with non-int id: '
+                            '%s' % comment['id']))
+
+                    # validate comment
+                    if not 'comment' in comment:
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment without a comment:'
+                            ' %s' % comment))
+                    elif not isinstance(comment['comment'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment with non-string '
+                            'comment: %s' % comment['comment']))
+
+                    # validate author
+                    if not 'author' in comment:
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment without an author: '
+                            '%s' % comment))
+                    elif not isinstance(comment['author'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment with non-string '
+                            'author reference: %s' % comment['author']))
+                    else:
+                        users = [x for x in data.get('users',
+                                 []) if isinstance(x, dict)
+                                 and 'name' in x]
+                        matches = [x for x in users
+                                   if x['name'] == comment['author']]
+                        if not matches:
+                            phase.error(SetupParserError(
+                                'Setup file defines a comment with a '
+                                'non-existant author: %s' % comment))
+
+                    # validate attachment
+                    if 'attachment' in comment:
+                        if not isinstance(comment['attachment'], basestring):
+                            phase.error(SetupParserError(
+                                'Setup file defines a comment with non-string '
+                                'attachment reference: %s' % comment))
+                        else:
+                            attachs = [x for x in data.get('attachments', [])
+                                       if isinstance(x, dict)
+                                       and 'name' in x]
+                            matches = [x for x in attachs
+                                       if x['name'] == comment['attachment']]
+                            if not matches:
+                                phase.error(SetupParserError(
+                                    'Setup file defines a comment with '
+                                    'non-existant attachment reference: %s'
+                                    % comment))
+
+                    if not 'card' in comment:
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment without a card: %s' %
+                            comment))
+                    elif not isinstance(comment['card'], int):
+                        phase.error(SetupParserError(
+                            'Setup file defines a comment with non-int card '
+                            'reference: %s' % comment['card']))
+                    else:
+                        cards = [x for x in data.get('cards', [])
+                                 if isinstance(x, dict) and 'id' in x]
+                        matches = [x for x in cards
+                                   if x['id'] == comment['card']]
+                        if not matches:
+                            phase.error(SetupParserError(
+                                'Setup file defines a comment with '
+                                'non-existant card reference: %s' % comment))
+
+    def _load_comments(self, phase, data, setup_file):
+        if not 'comments' in data:
+            return
+        for comment in data['comments']:
+            setup_file.comments[comment['id']] = Comment(
+                comment['id'],
+                comment['comment'],
+                comment['author'],
+                comment.get('attachment', None),
+                comment['card'])
+
+    def _validate_attachments(self, phase, data):
+        if not 'attachments' in data:
+            return
+        if not isinstance(data['attachments'], list):
+            phase.error(SetupParserError(
+                'Setup file defines non-list attachments entry.'))
+        else:
+            for attachment in data['attachments']:
+                if not isinstance(attachment, dict):
+                    phase.error(SetupParserError(
+                        'Setup file defines a non-dict attachment: %s'
+                        % attachment))
+                else:
+                    # validate name
+                    if not 'name' in attachment:
+                        phase.error(SetupParserError(
+                            'Setup file defines an attachment without a name: '
+                            '%s' % attachment))
+                    elif not isinstance(attachment['name'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines an attachment with non-string '
+                            'name: %s' % attachment['name']))
+
+                    if not 'comment' in attachment:
+                        phase.error(SetupParserError(
+                            'Setup file defines an attachment without a '
+                            'comment: %s' % attachment['comment']))                    
+
+    def _load_attachments(self, phase, data, setup_file):
+        if not 'attachments' in data:
+            return
+        for attachment in data['attachments']:
+            setup_file.attachments[attachment['name']] = Attachment(
+                attachment['name'],
+                attachment['comment'])
+
 
 class SetupRunner(object):
 
@@ -456,6 +965,16 @@ class SetupRunner(object):
             action_ids[lane] = len(action_ids) + 1
         for user in setup_file.users.itervalues():
             action_ids[user] = len(action_ids) + 1
+        for card in setup_file.cards.itervalues():
+            action_ids[card] = len(action_ids) + 1
+        for reason in setup_file.reasons.itervalues():
+            action_ids[reason] = len(action_ids) + 1
+        for milestone in setup_file.milestones.itervalues():
+            action_ids[milestone] = len(action_ids) + 1
+        for comment in setup_file.comments.itervalues():
+            action_ids[comment] = len(action_ids) + 1
+        for attachment in setup_file.attachments.itervalues():
+            action_ids[attachment] = len(action_ids) + 1
 
         # create actions for all the objects
         create_actions = self._create_objects(setup_file, action_ids)
@@ -480,8 +999,19 @@ class SetupRunner(object):
             actions.append(self._create_lane(setup_file, action_ids, lane))
         for user in setup_file.users.itervalues():
             actions.append(self._create_user(setup_file, action_ids, user))
-            actions.append(self._create_user_config(
-                setup_file, action_ids, user))
+        for card in setup_file.cards.itervalues():
+            actions.append(self._create_card(setup_file, action_ids, card))
+        for reason in setup_file.reasons.itervalues():
+            actions.append(self._create_reason(setup_file, action_ids, reason))
+        for milestone in setup_file.milestones.itervalues():
+            actions.append(self._create_milestone(
+                                setup_file, action_ids, milestone))
+        for comment in setup_file.comments.itervalues():
+            actions.append(self._create_comment(
+                                setup_file, action_ids, comment))
+        for attachment in setup_file.attachments.itervalues():
+            actions.append(self._create_attachment(
+                                setup_file, action_ids, attachment))
 
         # second pass: link all these objects together
         for view in setup_file.views.itervalues():
@@ -490,8 +1020,19 @@ class SetupRunner(object):
             actions.append(self._update_lane(setup_file, action_ids, lane))
         for user in setup_file.users.itervalues():
             actions.append(self._update_user(setup_file, action_ids, user))
-            actions.append(self._update_user_config(
-                setup_file, action_ids, user))
+        for card in setup_file.cards.itervalues():
+            actions.append(self._update_card(setup_file, action_ids, card))
+        for reason in setup_file.reasons.itervalues():
+            actions.append(self._update_reason(setup_file, action_ids, reason))
+        for milestone in setup_file.milestones.itervalues():
+            actions.append(self._update_milestone(
+                                setup_file, action_ids, milestone))
+        for comment in setup_file.comments.itervalues():
+            actions.append(self._update_comment(
+                                setup_file, action_ids, comment))
+        for attachment in setup_file.attachments.itervalues():
+            actions.append(self._update_attachment(
+                                setup_file, action_ids, attachment))
 
         return actions
 
@@ -533,9 +1074,50 @@ class SetupRunner(object):
                       for x in user.roles]))
         return actions.CreateAction(action_id, 'user', props)
 
-    def _create_user_config(self, setup_file, action_ids, user):
-        action_id = 'config-%s' % action_ids[user]
-        return actions.CreateAction(action_id, 'user-config', [])
+    def _create_card(self, setup_file, action_ids, card):
+        action_id = action_ids[card]
+        props = []
+        props.append(properties.TextProperty('title', card.title))
+        if card.description:
+            props.append(properties.TextProperty('description',
+                card.description))
+        return actions.CreateAction(action_id, 'card', props)
+
+    def _create_reason(self, setup_file, action_ids, reason):
+        action_id = action_ids[reason]
+        props = []
+        props.append(properties.TextProperty(
+                'short-name', reason.short_name))
+        props.append(properties.TextProperty('name', reason.name))
+        if reason.description:
+            props.append(properties.TextProperty(
+                    'description', reason.description))
+        return actions.CreateAction(action_id, 'reason', props)
+
+    def _create_milestone(self, setup_file, action_ids, milestone):
+        action_id = action_ids[milestone]
+        props = []
+        props.append(properties.TextProperty(
+                'short-name', milestone.short_name))
+        props.append(properties.TextProperty('name', milestone.name))
+        if milestone.description:
+            props.append(properties.TextProperty(
+                    'description', milestone.description))
+        props.append(properties.TimestampProperty(
+                'deadline', milestone.deadline))
+        return actions.CreateAction(action_id, 'milestone', props)
+
+    def _create_comment(self, setup_file, action_ids, comment):
+        action_id = action_ids[comment]
+        props = []
+        props.append(properties.TextProperty('comment', comment.content))
+        return actions.CreateAction(action_id, 'comment', props)
+
+    def _create_attachment(self, setup_file, action_ids, attachment):
+        action_id = action_ids[attachment]
+        props = []
+        props.append(properties.TextProperty('name', attachment.name))
+        return actions.CreateAction(action_id, 'attachment', props)
 
     def _update_view(self, setup_file, action_ids, view):
         references = []
@@ -549,9 +1131,10 @@ class SetupRunner(object):
         action_id = action_ids[view]
         props = [properties.ListProperty('lanes', references)]
         return actions.UpdateAction(
-            'update%s' % action_id, None, action_id, props)
+            'update-%s' % action_id, None, action_id, props)
 
     def _update_lane(self, setup_file, action_ids, lane):
+        props = []
         views = [x for x in setup_file.views.itervalues()
                  if x.lanes and lane.name in x.lanes]
 
@@ -561,23 +1144,139 @@ class SetupRunner(object):
             references.append(properties.ReferenceProperty(
                 'views', {'action': action_id}))
 
+        props.append(properties.ListProperty('views', references))
+
+        if lane.cards:
+            cards = [x for x in setup_file.cards.itervalues()
+                     if x.id in lane.cards]
+            references = []
+            for card in cards:
+                action_id = action_ids[card]
+                references.append(properties.ReferenceProperty(
+                    'cards', {'action': action_id}))
+            props.append(properties.ListProperty('cards', references))
+
         action_id = action_ids[lane]
-        props = [properties.ListProperty('views', references)]
         return actions.UpdateAction(
             'update-%s' % action_id, None, action_id, props)
 
     def _update_user(self, setup_file, action_ids, user):
         action_id = action_ids[user]
-        config_action_id = 'config-%s' % action_id
-        props = [properties.ReferenceProperty(
-            'config', {'action': config_action_id})]
+        return actions.UpdateAction(
+            'update-%s' % action_id, None, action_id, [])
+
+    def _update_card(self, setup_file, action_ids, card):
+        props = []
+
+        # add creator reference
+        creator = [x for x in setup_file.users.itervalues()
+                if x.name == card.creator][0]
+        ref = properties.ReferenceProperty('creator',
+                {'action': action_ids[creator]})
+        props.append(ref)
+
+        # add lane reference
+        lane = [x for x in setup_file.lanes.itervalues()
+                if x.name == card.lane][0]
+        ref = properties.ReferenceProperty('lane',
+                {'action': action_ids[lane]})
+        props.append(ref)
+
+        # add reason reference
+        reason = [x for x in setup_file.reasons.itervalues()
+                  if x.short_name == card.reason][0]
+        ref = properties.ReferenceProperty('reason',
+                {'action': action_ids[reason]})
+        props.append(ref)
+
+        # add milestone reference
+        if card.milestone:
+            milestone = [x for x in setup_file.milestones.itervalues()
+                    if x.short_name == card.milestone][0]
+            ref = properties.ReferenceProperty('milestone',
+                    {'action': action_ids[milestone]})
+            props.append(ref)
+
+        # add assignee references
+        if card.assignees:
+            references = []
+            for name in card.assignees:
+                assignee = [x for x in setup_file.users.itervalues()
+                            if x.name == name][0]
+                action_id = action_ids[assignee]
+                references.append(properties.ReferenceProperty(
+                    'assignees', {'action': action_id}))
+            props.append(properties.ListProperty('assignees', references))
+
+        if card.comments:
+            references = []
+            for comment_id in card.comments:
+                comment = [x for x in setup_file.comments.itervalues()
+                           if x.id == comment_id][0]
+                action_id = action_ids[comment]
+                references.append(properties.ReferenceProperty(
+                    'comments', {'action': action_id}))
+            props.append(properties.ListProperty('comments', references))
+
+        action_id = action_ids[card]
         return actions.UpdateAction(
             'update-%s' % action_id, None, action_id, props)
 
-    def _update_user_config(self, setup_file, action_ids, user):
-        user_action_id = action_ids[user]
-        action_id = 'config-%s' % user_action_id
-        props = [properties.ReferenceProperty(
-            'user', {'action': user_action_id})]
+    def _update_reason(self, setup_file, action_ids, reason):
+        if reason.work_items:
+            # TODO:
+            #   This is a reference to a remote repository, currently
+            #   unsupported by python-consonant.
+            pass
+        action_id = action_ids[reason]
+        return actions.UpdateAction(
+            'update-%s' % action_id, None, action_id, [])
+
+    def _update_milestone(self, setup_file, action_ids, milestone):
+        props = []
+
+        action_id = action_ids[milestone]
+        return actions.UpdateAction(
+            'update-%s' % action_id, None, action_id, props)
+
+    def _update_comment(self, setup_file, action_ids, comment):
+        props = []
+
+        # add author reference
+        author = [x for x in setup_file.users.itervalues()
+                  if x.name == comment.author][0]
+        ref = properties.ReferenceProperty('author',
+                  {'action': action_ids[author]})
+        props.append(ref)
+
+        # add attachment reference
+        if comment.attachment:
+            attachment = [x for x in setup_file.attachments.itervalues()
+                          if x.name == comment.attachment][0]
+            ref = properties.ReferenceProperty('attachment',
+                    {'action': action_ids[attachment]})
+            props.append(ref)
+
+        # add card reference
+        card = [x for x in setup_file.cards.itervalues()
+                if x.id == comment.card][0]
+        ref = properties.ReferenceProperty('card',
+                {'action': action_ids[card]})
+        props.append(ref)
+
+        action_id = action_ids[comment]
+        return actions.UpdateAction(
+            'update-%s' % action_id, None, action_id, props)
+
+    def _update_attachment(self, setup_file, action_ids, attachment):
+        props = []
+
+        comment = [x for x in setup_file.comments.itervalues()
+                   if x.id == attachment.comment][0]
+        ref = properties.ReferenceProperty('comment',
+                {'action': action_ids[comment]})
+        props.append(ref)
+
+        action_id = action_ids[attachment]
         return actions.UpdateAction(
             'update-%s' % action_id, None, action_id, props)
