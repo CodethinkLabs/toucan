@@ -26,23 +26,36 @@ class NameGenerator(object):
 
     """Generate user-friendly names for objects of different classes."""
 
+    def presentable_name(self, obj):
+        """Return a string representing a user-friendly object name."""
+        func_name = '_presentable_%s_name' % obj.klass.name.replace('-', '_')
+        return getattr(self, func_name)(obj)
+
     def short_names(self, obj):
         """Return a list of short user-friendly names for an object."""
-
         func_name = '_short_%s_names' % obj.klass.name.replace('-', '_')
         return getattr(self, func_name)(obj)
 
     def long_names(self, obj):
         """Return a list of long names for an object."""
-
         names = set()
         short_names = self.short_names(obj)
         for name in short_names:
             names.add('%s/%s' % (obj.klass.name, name))
         return names
 
+    def card_id(self, card):
+        """Return an identifier based on the card's UUID."""
+        return card.uuid[0:7]
+
+    def comment_id(self, comment):
+        """Return an identifier based on the comment's UUID."""
+        return comment.uuid[0:7]
+
     def _short_info_names(self, obj):
-        return set([obj.uuid])
+        return set([
+            obj.uuid,
+            ])
 
     def _short_view_names(self, obj):
         return set([
@@ -59,17 +72,19 @@ class NameGenerator(object):
     def _short_card_names(self, obj):
         return set([
             obj.uuid,
-            str(obj['number']),
+            self.card_id(obj)
             ])
 
     def _short_reason_names(self, obj):
         return set([
             obj.uuid,
+            obj.properties['short-name'].value.lower()
             ])
 
     def _short_milestone_names(self, obj):
         return set([
             obj.uuid,
+            obj.properties['short-name'].value.lower()
             ])
 
     def _short_user_names(self, obj):
@@ -79,20 +94,49 @@ class NameGenerator(object):
             obj['email'],
             ])
 
-    def _short_user_config_names(self, obj):
-        return set([
-            obj.uuid,
-            ])
-
     def _short_comment_names(self, obj):
         return set([
             obj.uuid,
+            self.comment_id(obj)
             ])
 
     def _short_attachment_names(self, obj):
         return set([
             obj.uuid,
+            obj.properties['name'].value
             ])
+
+    def _presentable_attachment_name(self, obj):
+        short_name = obj.properties['name'].value
+        return 'attachment/%s' % short_name
+
+    def _presentable_card_name(self, obj):
+        short_name = self.card_id(obj)
+        return 'card/%s' % short_name
+
+    def _presentable_comment_name(self, obj):
+        short_name = self.comment_id(obj)
+        return 'comment/%s' % short_name
+
+    def _presentable_lane_name(self, obj):
+        short_name = obj.properties['name'].value.lower()
+        return 'lane/%s' % short_name
+
+    def _presentable_milestone_name(self, obj):
+        short_name = obj.properties['short-name'].value.lower()
+        return 'milestone/%s' % short_name
+
+    def _presentable_reason_name(self, obj):
+        short_name = obj.properties['short-name'].value.lower()
+        return 'reason/%s' % short_name
+
+    def _presentable_user_name(self, obj):
+        short_name = obj.properties['name'].value.lower().split(' ')[0]
+        return 'user/%s' % short_name
+
+    def _presentable_view_name(self, obj):
+        short_name = obj.properties['name'].value.lower().split(' ')[0]
+        return 'view/%s' % short_name
 
 
 class NameResolver(object):
@@ -100,13 +144,13 @@ class NameResolver(object):
     """Resolve name patterns into objects that match the patterns."""
 
     def __init__(self, service, commit):
+        """Initialise a NameResolver."""
         self.name_generator = NameGenerator()
         self.service = service
         self.commit = commit
 
     def resolve_patterns(self, patterns, class_name):
         """Return all objects that match the patterns and class."""
-
         # fetch all objects in the commit or all objects of a
         # specific class if one is provided
         if class_name:
@@ -197,31 +241,27 @@ class NameResolver(object):
     def _get_card_children(self, card, card_names):
         result = set()
         # <card>/lane
-        result.update(self._resolve_reference(
-            card, card_names, 'lane', 'lane'))
-        # <card>/milestone
-        result.update(self._resolve_reference(
-            card, card_names, 'milestone', 'milestone'))
-        # <card>/reason
-        result.update(self._resolve_reference(
-            card, card_names, 'reason', 'reason'))
-        # <card>/assignees/<name>
-        result.update(self._resolve_references(card, card_names, 'assignees'))
-        # <card>/comments/<index>
-        result.update(self._resolve_references(card, card_names, 'comments'))
-        return result
-
-    def _get_user_config_children(self, config, config_names):
-        result = set()
         result.add(self._resolve_reference(
-            config, config_names, 'user', 'user'))
+            card, card_names, 'lane', 'lane'))
+        if 'milestone' in card:
+            # <card>/milestone
+            result.add(self._resolve_reference(
+                card, card_names, 'milestone', 'milestone'))
+        # <card>/reason
+        result.add(self._resolve_reference(
+            card, card_names, 'reason', 'reason'))
+        if 'assignees' in card:
+            # <card>/assignees/<name>
+            result.update(self._resolve_references(
+                card, card_names, 'assignees'))
+        if 'comments' in card:
+            # <card>/comments/<index>
+            result.update(self._resolve_references(
+                card, card_names, 'comments'))
         return result
 
     def _get_user_children(self, user, user_names):
-        result = set()
-        result.add(self._resolve_reference(
-            user, user_names, 'config', 'config'))
-        return result
+        return set()
 
     def _get_reason_children(self, reason, reason_names):
         # TODO
@@ -239,15 +279,16 @@ class NameResolver(object):
         # <comment>/author
         result.add(self._resolve_reference(
             comment, comment_names, 'author', 'author'))
-        # <comment>/attachment
-        result.add(self._resolve_reference(
-            comment, comment_names, 'attachment', 'attachment'))
+        if 'attachment' in comment:
+            # <comment>/attachment
+            result.add(self._resolve_reference(
+                comment, comment_names, 'attachment', 'attachment'))
         return set()
 
     def _get_attachment_children(self, attachment, attachment_names):
         result = set()
         # <attachment>/comment
-        result.append(self._resolve_reference(
+        result.add(self._resolve_reference(
             attachment, attachment_names, 'comment', 'comment'))
         return set()
 
