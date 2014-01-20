@@ -60,13 +60,13 @@ class NameGenerator(object):
     def _short_view_names(self, obj):
         return set([
             obj.uuid,
-            obj['name'].lower().split(' ')[0],
+            obj['name'].lower().split(' ')[0]
             ])
 
     def _short_lane_names(self, obj):
         return set([
             obj.uuid,
-            obj['name'].lower(),
+            obj['name'].lower()
             ])
 
     def _short_card_names(self, obj):
@@ -78,20 +78,21 @@ class NameGenerator(object):
     def _short_reason_names(self, obj):
         return set([
             obj.uuid,
-            obj.properties['short-name'].value.lower()
+            obj['short-name'].lower()
             ])
 
     def _short_milestone_names(self, obj):
         return set([
             obj.uuid,
-            obj.properties['short-name'].value.lower()
+            obj['short-name'].lower()
             ])
 
     def _short_user_names(self, obj):
         return set([
             obj.uuid,
             obj['name'].lower().split(' ')[0],
-            obj['email'],
+            obj['name'].lower(),
+            obj['email']
             ])
 
     def _short_comment_names(self, obj):
@@ -103,11 +104,11 @@ class NameGenerator(object):
     def _short_attachment_names(self, obj):
         return set([
             obj.uuid,
-            obj.properties['name'].value
+            obj['name']
             ])
 
     def _presentable_attachment_name(self, obj):
-        short_name = obj.properties['name'].value
+        short_name = obj['name']
         return 'attachment/%s' % short_name
 
     def _presentable_card_name(self, obj):
@@ -119,23 +120,23 @@ class NameGenerator(object):
         return 'comment/%s' % short_name
 
     def _presentable_lane_name(self, obj):
-        short_name = obj.properties['name'].value.lower()
+        short_name = obj['name'].lower()
         return 'lane/%s' % short_name
 
     def _presentable_milestone_name(self, obj):
-        short_name = obj.properties['short-name'].value.lower()
+        short_name = obj['short-name'].lower()
         return 'milestone/%s' % short_name
 
     def _presentable_reason_name(self, obj):
-        short_name = obj.properties['short-name'].value.lower()
+        short_name = obj['short-name'].lower()
         return 'reason/%s' % short_name
 
     def _presentable_user_name(self, obj):
-        short_name = obj.properties['name'].value.lower().split(' ')[0]
+        short_name = obj['name'].lower().split(' ')[0]
         return 'user/%s' % short_name
 
     def _presentable_view_name(self, obj):
-        short_name = obj.properties['name'].value.lower().split(' ')[0]
+        short_name = obj['name'].lower().split(' ')[0]
         return 'view/%s' % short_name
 
 
@@ -159,10 +160,19 @@ class NameResolver(object):
             klass = None
         objects = self.service.objects(self.commit, klass)
 
+        # ensure that patterns is a list
+        if not isinstance(patterns, list):
+            patterns = [patterns]
+
         # filter the objects and their "children" using the patterns provided
         result = set()
-        for klass_objects in objects.itervalues():
-            for obj in klass_objects:
+        if not klass:
+            for klass_objects in objects.itervalues():
+                for obj in klass_objects:
+                    result.update(self._resolve_patterns_for_object(
+                        patterns, obj))
+        else:
+            for obj in objects:
                 result.update(self._resolve_patterns_for_object(patterns, obj))
 
         return result
@@ -177,14 +187,16 @@ class NameResolver(object):
         # add the object to the result if any of its names match any
         # of the patterns
         for pattern in patterns:
-            if any(self._matches_pattern(pattern, name) for name in names):
+            if any(self._matches_pattern(pattern.lower(), name)
+                    for name in names):
                 result.add(obj)
 
         # get a list of "children" (i.e. named references to other objects)
         # of the object and match those against the patterns as well
         for child_names, child in self._get_children(obj, names):
             for pattern in patterns:
-                if any(self._matches_pattern(pattern, n) for n in child_names):
+                if any(self._matches_pattern(pattern.lower(), n)
+                        for n in child_names):
                     result.add(child)
 
         return result
@@ -199,13 +211,13 @@ class NameResolver(object):
         # and returns a set with pairs of name tuples and referenced objects.
         # the names generated for the referenced objects are of the form
         # <obj name>/<prop name>/<referenced obj name>, e.g. lane/cards/1234
-        references = obj.properties.get(prop_name, None)
+        references = obj.get(prop_name, None)
         result = set()
         if references:
-            for reference in references.value:
+            for reference in references:
                 other = self.service.resolve_reference(reference.value)
                 if other.klass.name == 'comment':
-                    other_names = [references.value.index(reference)]
+                    other_names = [references.index(reference)]
                 else:
                     other_names = self.name_generator.short_names(other)
                 other_names = [
@@ -219,8 +231,8 @@ class NameResolver(object):
         # resolve a reference property of an object and return a name tuple
         # and the referenced object. the names generated for the referenced
         # object are of the form <obj name>/<short name>/<referenced obj name>
-        reference = obj.properties.get(prop_name, None)
-        other = self.service.resolve_reference(reference.value)
+        reference = obj.get(prop_name, None)
+        other = self.service.resolve_reference(reference)
         other_names = ['%s/%s' % (name, short_name) for name in obj_names]
         return tuple(other_names), other
 
