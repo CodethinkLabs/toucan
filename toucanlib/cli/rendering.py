@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Codethink Limited.
+# Copyright (C) 2013-2014 Codethink Limited.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -58,9 +58,7 @@ class InfoListRenderer(ObjectClassListRenderer):
 
         rows = []
         for info in infos:
-            rows.append(('info',
-                         info.properties['name'].value,
-                         info.properties['description'].value.strip()))
+            rows.append(('info', info['name'], info['description'].strip()))
         self.render_rows(stream, rows)
 
 
@@ -72,14 +70,12 @@ class ViewListRenderer(ObjectClassListRenderer):
         """Render a list of views to a text stream."""
 
         rows = []
-        for view in sorted(views, key=lambda l: l.properties['name'].value):
-            if 'lanes' in view.properties:
-                num_lanes = len(view.properties['lanes'].value)
+        for view in sorted(views, key=lambda view: view['name']):
+            if 'lanes' in view:
+                num_lanes = len(view['lanes'])
             else:
                 num_lanes = 0
-            rows.append(('view',
-                         view.properties['name'].value,
-                         view.properties['description'].value.strip(),
+            rows.append(('view', view['name'], view['description'].strip(),
                          '%d lanes' % num_lanes))
         self.render_rows(stream, rows)
 
@@ -92,14 +88,12 @@ class LaneListRenderer(ObjectClassListRenderer):
         """Render a list of lanes to a text stream."""
 
         rows = []
-        for lane in sorted(lanes, key=lambda l: l.properties['name'].value):
-            if 'cards' in lane.properties:
-                num_cards = len(lane.properties['cards'].value)
+        for lane in sorted(lanes, key=lambda lane: lane['name']):
+            if 'cards' in lane:
+                num_cards = len(lane['cards'])
             else:
                 num_cards = 0
-            rows.append(('lane',
-                         lane.properties['name'].value,
-                         lane.properties['description'].value.strip(),
+            rows.append(('lane', lane['name'], lane['description'].strip(),
                          '%d cards' % num_cards))
         self.render_rows(stream, rows)
 
@@ -112,12 +106,9 @@ class UserListRenderer(ObjectClassListRenderer):
         """Render a list of users to a text stream."""
 
         rows = []
-        for user in sorted(users, key=lambda u: u.properties['name'].value):
-            roles = [role.value for role in user.properties['roles'].value]
-            rows.append(('user',
-                         user.properties['name'].value,
-                         user.properties['email'].value,
-                         ','.join(roles)))
+        for user in sorted(users, key=lambda user: user['name']):
+            roles = [role.value for role in user['roles']]
+            rows.append(('user', user['name'], user['email'], ','.join(roles)))
         self.render_rows(stream, rows)
 
 
@@ -130,20 +121,17 @@ class UserConfigListRenderer(ObjectClassListRenderer):
 
         rows = []
         for config in sorted(configs, key=self._sort_key):
-            user = self.service.resolve_reference(
-                config.properties['user'].value)
-            if 'default-view' in config.properties:
-                default_view = config.properties['default-view'].value
+            user = self.service.resolve_reference(config['user'])
+            if 'default-view' in config:
+                default_view = config['default-view']
             else:
                 default_view = ''
-            rows.append(('user-config',
-                         user.properties['name'].value,
-                         default_view))
+            rows.append(('user-config', user['name'], default_view))
         self.render_rows(stream, rows)
 
     def _sort_key(self, config):
-        user = self.service.resolve_reference(config.properties['user'].value)
-        return user.properties['name'].value
+        user = self.service.resolve_reference(config['user'])
+        return user['name']
 
 
 class ListRenderer(object):

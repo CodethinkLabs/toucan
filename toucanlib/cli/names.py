@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Codethink Limited.
+# Copyright (C) 2013-2014 Codethink Limited.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -47,19 +47,19 @@ class NameGenerator(object):
     def _short_view_names(self, obj):
         return set([
             obj.uuid,
-            obj.properties['name'].value.lower().split(' ')[0],
+            obj['name'].lower().split(' ')[0],
             ])
 
     def _short_lane_names(self, obj):
         return set([
             obj.uuid,
-            obj.properties['name'].value.lower(),
+            obj['name'].lower(),
             ])
 
     def _short_card_names(self, obj):
         return set([
             obj.uuid,
-            str(obj.properties['number'].value),
+            str(obj['number']),
             ])
 
     def _short_reason_names(self, obj):
@@ -75,8 +75,8 @@ class NameGenerator(object):
     def _short_user_names(self, obj):
         return set([
             obj.uuid,
-            obj.properties['name'].value.lower().split(' ')[0],
-            obj.properties['email'].value,
+            obj['name'].lower().split(' ')[0],
+            obj['email'],
             ])
 
     def _short_user_config_names(self, obj):
