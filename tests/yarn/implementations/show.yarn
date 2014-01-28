@@ -1,0 +1,343 @@
+Show information about objects in toucan boards
+===============================================
+
+Set up a board
+--------------
+
+    IMPLEMENTS GIVEN a populated toucan board
+
+    cat <<-EOF > "$DATADIR/setup.yaml"
+    name: example.board
+    schema: org.consonant-project.toucan.schema.0
+    info:
+        name: Example board
+        description: This is an example board
+    lanes:
+      - name: Backlog
+        description: Backlog lane
+      - name: Doing
+        description: Doing lane
+      - name: Review
+        description: Review lane
+      - name: Done
+        description: Done lane
+    views:
+      - name: Default
+        description: Default view
+        lanes:
+          - Backlog
+          - Doing
+          - Review
+          - Done
+      - name: Secondary
+        description: Secondary view
+        lanes:
+          - Backlog
+          - Doing
+    users:
+      - name: Test User
+        email: test@test.org
+        roles:
+          - admin
+    reasons:
+      - short-name: xyz
+        name: xyz - implementation of foo.
+        description: >
+          This is the description of reason/xyz.
+    milestones:
+      - short-name: xyz
+        name: xyz - foo implemented.
+        description: >
+          This milestone marks when foo should be implemented by.
+        deadline: <something here>
+    cards:
+      - id: 0
+        title: Implement x for foo
+        description: >
+          Implementation detail of x for the feature named foo.
+        creator: Test User
+        lane: Backlog
+        reason: xyz
+        milestone: xyz
+        assignees:
+          - Test User
+        comments:
+          - 0
+      - id: 1
+        title: Implement y for foo
+        description: >
+          Implementation detail of y for the feature named foo.
+        creator: Test User
+        lane: Backlog
+        reason: xyz
+        milestone: xyz
+        assignees:
+          - Test User
+      - id: 2
+        title: Implement z for foo
+        description: >
+          Implementation detail of z for the feature named foo.
+        creator: Test User
+        lane: Backlog
+        reason: xyz
+        milestone: xyz
+        assignees:
+          - Test User
+    comments:
+      - card: 0
+        comment: I will do this!
+        author: Test User
+        attachment: example.png
+        id: 0
+    attachments:
+      - name: example.png
+        comment: 0
+    EOF
+
+    run_toucan_cli <<-EOF
+    setup "$DATADIR/setup.yaml" "$DATADIR/board"
+    EOF
+
+Set up a board without cards
+----------------------------
+
+    IMPLEMENTS GIVEN a toucan board with no cards
+
+    cat <<-EOF > "$DATADIR/setup.yaml"
+    name: example.board
+    schema: org.consonant-project.toucan.schema.0
+    info:
+        name: Example board
+        description: This is an example board
+    lanes:
+      - name: Backlog
+        description: Backlog lane
+      - name: Doing
+        description: Doing lane
+      - name: Review
+        description: Review lane
+      - name: Done
+        description: Done lane
+    views:
+      - name: Default
+        description: Default view
+        lanes:
+          - Backlog
+          - Doing
+          - Review
+          - Done
+      - name: Secondary
+        description: Secondary view
+        lanes:
+          - Backlog
+          - Doing
+    users:
+      - name: Test User
+        email: test@test.org
+        roles:
+          - admin
+    EOF
+
+    run_toucan_cli <<-EOF
+    setup "$DATADIR/setup.yaml" "$DATADIR/board"
+    EOF
+                                                                                  
+Run toucan show
+---------------
+
+    IMPLEMENTS WHEN running "toucan show ?(.*)"
+
+    run_toucan_cli <<-EOF
+    show "$DATADIR/board" $MATCH_1
+    EOF
+
+Check the board output (reused when name/description/views are needed again)
+----------------------------------------------------------------------------
+
+    IMPLEMENTS THEN the output includes the (.+) name
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    name=$(grep "name:" "$DATADIR/stdout" | wc -l)
+    test $name -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) description
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    description=$(grep "description: >" "$DATADIR/stdout" | wc -l)
+    test $description -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) views
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    views=$(grep "views:" "$DATADIR/stdout" | wc -l)
+    test $views -eq 1
+
+Check the view output
+---------------------
+
+    IMPLEMENTS THEN the output includes the (.+) lanes
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    lanes=$(grep "lanes:" "$DATADIR/stdout" | wc -l)
+    test $lanes -eq 1
+
+Check the lane output
+---------------------
+
+    IMPLEMENTS THEN the output includes the (.+) cards
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    cards=$(grep "cards:" "$DATADIR/stdout" | wc -l)
+    test $cards -eq 1
+
+Check the card output
+---------------------
+
+    IMPLEMENTS THEN the output includes the (.+) number
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    number=$(grep "number:" "$DATADIR/stdout" | wc -l)
+    test $number -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) title
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    title=$(grep "title:" "$DATADIR/stdout" | wc -l)
+    test $title -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) creator
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    creator=$(grep "creator:" "$DATADIR/stdout" | wc -l)
+    test $creator -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) reason
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    reason=$(grep "reason:" "$DATADIR/stdout" | wc -l)
+    test $reason -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) milestone
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    milestone=$(grep "milestone:" "$DATADIR/stdout" | wc -l)
+    test $milestone -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) assignees
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    assignees=$(grep "assignees:" "$DATADIR/stdout" | wc -l)
+    test $assignees -eq 1
+
+    IMPLEMENTS THEN the output includes the (.+) comments
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    comments=$(grep "comments:" "$DATADIR/stdout" | wc -l)
+    test $comments -eq 1
+
+Check the user output
+---------------------
+
+    IMPLEMENTS THEN the output contains the (.+) email address
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    email=$(grep "email:" "$DATADIR/stdout" | wc -l)
+    test $email -eq 1
+
+    IMPLEMENTS THEN the output contains the (.+) default-view
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    view=$(grep "default-view:" "$DATADIR/stdout" | wc -l)
+    test $view -eq 1
+
+    IMPLEMENTS THEN the output contains the (.+) avatar
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    avatar=$(grep "avatar:" "$DATADIR/stdout" | wc -l)
+    test $avatar -eq 1
+
+Check the reason output
+-----------------------
+
+    IMPLEMENTS THEN the output contains the (.+) short-name
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    name=$(grep "short-name:" "$DATADIR/stdout" | wc -l)
+    test $name -eq 1
+
+Check the milestone output
+--------------------------
+
+    IMPLEMENTS THEN the output contains the (.+) deadline
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    deadline=$(grep "deadline:" "$DATADIR/stdout" | wc -l)
+    test $deadline -eq 1
+
+Check the comment output
+------------------------
+
+    IMPLEMENTS THEN the output contains the comment and card numbers
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    numbers=$(fgrep "number:\ncard:" "$DATADIR/stdout" | wc -l)
+    test $numbers -eq 2
+
+    IMPLEMENTS THEN the output contains the comment content
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    content=$(grep "comment: >" "$DATADIR/stdout" | wc -l)
+    test $content -eq 1
+
+    IMPLEMENTS THEN the output contains the (.+) author
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    author=$(grep "author:" "$DATADIR/stdout" | wc -l)
+    test $author -eq 1
+
+    IMPLEMENTS THEN the output contains the comment attachment-name
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    attachment=$(grep "attachment:" "$DATADIR/stdout" | wc -l)
+    test $attachment -eq 1
+
+Check the attachment output
+---------------------------
+
+    IMPLEMENTS THEN the output contains the number of the comment with the attachment
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    number=$(grep "comment:" "$DATADIR/stdout" | wc -l)
+    test $number -eq 1
+
+Check the error output
+----------------------
+
+    IMPLEMENTS THEN the output contains the phrase (.+)
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    phrase=$(grep "^$MATCH_1" "$DATADIR/stdout" | wc -l)
+    test $phrase -ge 1

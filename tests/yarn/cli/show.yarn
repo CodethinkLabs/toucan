@@ -1,0 +1,151 @@
+View detailed information about objects in toucan boards.
+=========================================================
+
+Display information about the board object
+------------------------------------------
+
+    SCENARIO display information about a board object
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show info/*"
+
+    THEN     the output includes the board name
+    AND      the output includes the board description
+    AND      the output includes the board views
+
+Display information about a view in a board
+-------------------------------------------
+
+    SCENARIO display information about a view
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show view/default"
+
+    THEN     the output includes the view name
+    AND      the output includes the view description
+    AND      the output includes the view lanes
+
+Display information about a lane in a board
+-------------------------------------------
+
+    SCENARIO display information about a lane
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show lane/backlog"
+
+    THEN     the output includes the lane name
+    AND      the output includes the lane description
+    AND      the output includes the lane views
+    AND      the output includes the lane cards
+
+Display information about a card in a board
+-------------------------------------------
+
+    SCENARIO display information about a card
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show card/<name>"
+
+    THEN     the output contains the card number
+    AND      the output contains the card title
+    AND      the output contains the card description
+    AND      the output contains the card creator
+    AND      the output contains the card reason
+    AND      the output contains the card assignees
+    AND      the output contains the card comments
+
+Display information about a user in a board
+-------------------------------------------
+
+    SCENARIO display information about a user
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show user/test"
+
+    THEN     the output contains the user name
+    AND      the output contains the user email address
+    AND      the output contains the user default-view
+    AND      the output contains the user avatar
+
+Display information about a reason in a board
+---------------------------------------------
+
+    SCENARIO display information about a reason
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show reason/xyz"
+
+    THEN     the output contains the reason name
+    AND      the output contains the reason short-name
+    AND      the output contains the reason description
+    AND      the output contains the reason cards
+
+Display information about a milestone in a board
+------------------------------------------------
+
+    SCENARIO display information about a milestone
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show milestone/xyz"
+
+    THEN     the output contains the milestone name
+    AND      the output contains the milestone short-name
+    AND      the output contains the milestone deadline
+    AND      the output contains the milestone cards
+
+Display information about a comment in a board
+----------------------------------------------
+
+    SCENARIO display information about a comment
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show comment/<name>"
+
+    THEN     the output contains the comment and card numbers
+    AND      the output contains the comment author
+    AND      the output contains the comment content
+    AND      the output contains the comment attachment-name
+
+Display information about an attachment in a board
+--------------------------------------------------
+
+    SCENARIO display information about an attachment
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show attachment/example.png"
+
+    THEN     the output contains the short-name of the comment that has the attachment
+    AND      the output contains the attachment name
+
+Display an error if attempting to view a non-existant object
+------------------------------------------------------------
+
+    SCENARIO display an error when attempting to view a non-existant object
+
+    GIVEN    a toucan board with no cards
+
+    WHEN     running "toucan show card/*"
+
+    THEN     the output contains the phrase "No objects found"
+
+Display the board when no pattern is specified
+----------------------------------------------
+
+    SCENARIO display the board when no pattern is specified
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show"
+
+    THEN     the output contains the board name
+    AND      the output contains the board description
+    AND      the output contains the board views
