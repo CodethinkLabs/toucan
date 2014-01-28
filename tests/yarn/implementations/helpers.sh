@@ -115,3 +115,143 @@ EOF
         py.test -q test.py
     fi
 }
+
+check_object_count()
+{
+    trap dump_output 0
+    cd $DATADIR
+    VALUE=$(cat)
+    cat > test.py <<-EOF
+import yaml, types
+
+objects = $VALUE
+
+with open('stdout', 'r') as stream:
+    output = yaml.load_all(stream)
+    if not isinstance(output, types.GeneratorType):
+        print 'bad output'
+    else:
+        data = []
+        for item in output:
+            if item:
+                data.append(item)
+        assert len(data) == objects
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}
+
+check_object_property()
+{
+    trap dump_output 0
+    cd $DATADIR
+    PROPERTY=$(cat)
+    cat > test.py <<-EOF
+import yaml, types
+
+prop = $PROPERTY
+
+with open('stdout', 'r') as stream:
+    output = yaml.load_all(stream)
+    if not isinstance(output, types.GeneratorType):
+        raise Exception('Bad output')
+    elif not isinstance(prop, dict):
+        raise Exception('Property request must be a dict.')
+    else:
+        data = []
+        for item in output:
+            if item:
+                data.append(item)
+        assert data[prop['object']][prop['key']] == prop['value']
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}
+
+check_object_property_order()
+{
+    trap dump_output 0
+    cd $DATADIR
+    OPTIONS=$(cat)
+    cat > test.py <<-EOF
+import yaml, types
+
+options = $OPTIONS
+
+with open('stdout', 'r') as stream:
+    output = yaml.load_all(stream)
+    if not isinstance(output, types.GeneratorType):
+        raise Exception('Bad output')
+    elif not isinstance(options, dict):
+        raise Exception('Property request must be a dict.')
+    else:
+        data = []
+        for item in output:
+            if item:
+                data.append(item)
+        assert data[options['object'] - 1].keys() == options['order']
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}
+
+check_object_property_length()
+{
+    trap dump_output 0
+    cd $DATADIR
+    OPTIONS=$(cat)
+    cat > test.py <<-EOF
+import yaml, types
+
+options = $OPTIONS
+
+with open('stdout', 'r') as stream:
+    output = yaml.load_all(stream)
+    if not isinstance(output, types.GeneratorType):
+        raise Exception('Bad output')
+    elif not isinstance(options, dict):
+        raise Exception('Property request must be a dict.')
+    else:
+        data = []
+        for item in output:
+            if item:
+                data.append(item)
+        prop = data[options['object'] - 1][options['property']]
+        assert len(prop) == options['length']
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}
+
+check_object_property_existence()
+{
+    trap dump_output 0
+    cd $DATADIR
+    OPTIONS=$(cat)
+    cat > test.py <<-EOF
+import yaml, types
+
+options = $OPTIONS
+
+with open('stdout', 'r') as stream:
+    output = yaml.load_all(stream)
+    if not isinstance(output, types.GeneratorType):
+        raise Exception('Bad output')
+    elif not isinstance(options, dict):
+        raise Exception('Property request must be a dict.')
+    else:
+        data = []
+        for item in output:
+            if item:
+                data.append(item)
+        assert options['property'] in data[options['object']]
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}
+}
