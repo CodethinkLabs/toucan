@@ -115,3 +115,27 @@ EOF
         py.test -q test.py
     fi
 }
+
+check_object()
+{
+    trap dump_output 0
+    cd $DATADIR
+    CODE=$(cat)
+    cat > test.py <<-EOF
+import yaml, types
+
+with open('stdout', 'r') as stream:
+    output = yaml.load_all(stream)
+    if not isinstance(output, types.GeneratorType):
+        raise Exception('The output produced was not of the expected form.')
+    else:
+        data = []
+        for item in output:
+            if item:
+                data.append(item)
+        $CODE
+EOF
+    if ! python test.py 2>&1 >/dev/null; then
+        py.test -q test.py
+    fi
+}

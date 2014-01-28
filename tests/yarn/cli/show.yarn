@@ -1,0 +1,194 @@
+View detailed information about objects in toucan boards
+========================================================
+
+Show information about the board object
+---------------------------------------
+
+    SCENARIO show information about a board object
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show info/*"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "Example board"
+    AND      object 1 has the description "This is an example board"
+    AND      object 1 has the views "['view/default', 'view/secondary']"
+    AND      object 1 has properties in order "['name', 'description', 'views']"
+
+Show information about a view in a board
+----------------------------------------
+
+    SCENARIO show information about a view
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show view/default"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "Default"
+    AND      object 1 has the description "Default view"
+    AND      object 1 has the lanes "['lane/backlog', 'lane/doing', 'lane/review', 'lane/done']"
+    AND      object 1 has properties in order "['name', 'description', 'lanes']"
+
+Show information about a lane in a board
+----------------------------------------
+
+    SCENARIO show information about a lane
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show lane/backlog"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "Backlog"
+    AND      object 1 has the description "Backlog lane"
+    AND      object 1 has the views "['view/default', 'view/secondary']"
+    AND      object 1 has a list "cards" with 3 elements
+    AND      object 1 has properties in order "['name', 'description', 'views', 'cards']"
+
+Show information about a card in a board
+----------------------------------------
+
+    SCENARIO show information about a card
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show card/*"
+
+    THEN     the output includes 3 objects
+    AND      object 1 has an identifying number
+    AND      object 1 has the title "Implement x for foo"
+    AND      object 1 has the description "Implementation detail of x for the feature named foo."
+    AND      object 1 has the lane "lane/backlog"
+    AND      object 1 has the creator "user/test"
+    AND      object 1 has the reason "reason/xyz"
+    AND      object 1 has the milestone "milestone/xyz"
+    AND      object 1 has the assignees "['user/test']"
+    AND      object 1 has a list "comments" with 1 elements
+    AND      object 1 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator', 'assignees']"
+
+    AND      object 2 has an identifying number
+    AND      object 2 has the title "Implement y for foo"
+    AND      object 2 has the description "Implementation detail of y for the feature named foo."
+    AND      object 2 has the lane "Backlog"
+    AND      object 2 has the creator "Test User"
+    AND      object 2 has the reason "xyz"
+    AND      object 2 has the milestone "xyz"
+    AND      object 2 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator']"
+
+    AND      object 3 has an identifying number
+    AND      object 3 has the title "Implement z for foo"
+    AND      object 3 has the description "Implementation detail of z for the feature named foo."
+    AND      object 3 has the lane "Backlog"
+    AND      object 3 has the creator "Test User"
+    AND      object 3 has the reason "xyz"
+    AND      object 3 has the milestone "xyz"
+    AND      object 3 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator']"
+
+Show information about a user in a board
+----------------------------------------
+
+    SCENARIO show information about a user
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show user/test"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "Test User"
+    AND      object 1 has the email "test@test.org"
+    AND      object 1 has the roles "['admin']"
+    AND      object 1 has the default-view "view/default"
+    AND      object 1 has the avatar "avatars.test.org/test"
+    AND      object 1 has properties in order "['name', 'email', 'roles', 'default-view', 'avatar']"
+
+Show information about a reason in a board
+------------------------------------------
+
+    SCENARIO show information about a reason
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show reason/xyz"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "xyz - implementation of foo"
+    AND      object 1 has the short-name "xyz"
+    AND      object 1 has the description "This is the description of reason/xyz."
+    AND      object 1 has a list "cards" with 3 elements
+    AND      object 1 has properties in order "['short-name', 'name', 'description', 'cards']"
+
+Show information about a milestone in a board
+---------------------------------------------
+
+    SCENARIO show information about a milestone
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show milestone/xyz"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "xyz - implementation of foo"
+    AND      object 1 has the short-name "xyz"
+    AND      object 1 has the description "This is the description of reason/xyz."
+    AND      object 1 has the deadline "1970-01-01"
+    AND      object 1 has a list "cards" with 3 elements
+    AND      object 1 has properties in order "['short-name', 'name', 'description', 'deadline', 'cards']"
+
+Show information about a comment in a board
+-------------------------------------------
+
+    SCENARIO show information about a comment
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show comment/*"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has an identifying number
+    AND      object 1 has a card reference
+    AND      object 1 has the author "user/test"
+    AND      object 1 has the comment "I will do this!"
+    AND      object 1 has the attachment "attachment/example.png"
+    AND      object 1 has properties in order "['author', 'comment', 'attachment']"
+
+Show information about an attachment in a board
+-----------------------------------------------
+
+    SCENARIO show information about an attachment
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show attachment/example.png"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has a comment reference
+    AND      object 1 has the name "example.png"
+    AND      object 1 has properties in order "['name', 'comment']"
+
+Show an error if attempting to show a non-existant object
+---------------------------------------------------------
+
+    SCENARIO show an error when attempting to show a non-existant object
+
+    GIVEN    a toucan board with no cards
+
+    WHEN     running "toucan show card/*"
+
+    THEN     the output includes the phrase "No objects found"
+
+Show the board when no pattern is specified
+-------------------------------------------
+
+    SCENARIO show the board when no pattern is specified
+
+    GIVEN    a populated toucan board
+
+    WHEN     running "toucan show"
+
+    THEN     the output includes 1 objects
+    AND      object 1 has the name "Example board"
+    AND      object 1 has the description "This is an example board"
+    AND      object 1 has the views "['view/default', 'view/secondary']
+    AND      object 1 has properties in order "['name', 'description', 'views']"
