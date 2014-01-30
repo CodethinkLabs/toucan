@@ -68,3 +68,16 @@ class Toucan(cliapp.Application):
         # Run show command
         cmd = toucanlib.cli.commands.ShowCommand(self, board, patterns)
         cmd.run()
+
+    def cmd_add(self, args):
+        """Add an object to a Toucan board."""
+        # If there are not enough arquments then raise an exception
+        if len(args) < 2:
+            raise cliapp.AppException('Usage: toucan add BOARD CLASS')
+
+        board = args[0]
+        klass = args[1]
+
+        # Run add command
+        cmd = toucanlib.cli.commands.AddCommand(self, board, klass)
+        cmd.run()
