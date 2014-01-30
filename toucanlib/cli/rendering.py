@@ -842,3 +842,104 @@ class ShowRenderer(object):
         renderer_class = renderer_classes[name]
         renderer = renderer_class(self.service, self.commit)
         renderer.render(stream, objects)
+
+
+class TemplateRenderer(object):
+
+    """Render an object template to a text stream."""
+
+    def __init__(self, service):
+        self.service = service
+
+    def render(self, stream, klass):
+        """Render a template to a stream."""
+
+        templates = {
+            'attachment': self._attachment_template,
+            'card': self._card_template,
+            'comment': self._comment_template,
+            'lane': self._lane_template,
+            'milestone': self._milestone_template,
+            'reason': self._reason_template,
+            'user': self._user_template,
+            'view': self._view_template
+        }
+
+        template = templates[klass]
+        for line in template():
+            stream.write(line + '\n')
+
+    def _attachment_template(self):
+        raise NotImplementedError
+
+    def _card_template(self):
+        lines = []
+
+        lines.append('title: # required')
+        lines.append('description: >\n  ')
+        lines.append('creator: # required')
+        lines.append('lane: # required')
+        lines.append('reason: # required')
+        lines.append('milestone: ')
+        lines.append('assignees:\n  - ')
+
+        return lines
+
+    def _comment_template(self):
+        lines = []
+
+        lines.append('card: # required - the short uuid of the card '
+                     'that you are commenting on')
+        lines.append('author: # required')
+        lines.append('comment: >\n  # required')
+
+        return lines
+
+    def _lane_template(self):
+        lines = []
+
+        lines.append('name: # required')
+        lines.append('description: >\n  ')
+        lines.append('views:\n  - # required')
+        lines.append('cards:\n  - ')
+
+        return lines
+
+    def _milestone_template(self):
+        lines = []
+
+        lines.append('short-name: # required')
+        lines.append('name: # required')
+        lines.append('description: >\n  ')
+        lines.append('deadline: # required - POSIX time')
+
+        return lines
+
+    def _reason_template(self):
+        lines = []
+
+        lines.append('short-name: # required')
+        lines.append('name: # required')
+        lines.append('description: >\n  ')
+
+        return lines
+
+    def _user_template(self):
+        lines = []
+
+        lines.append('name: # required')
+        lines.append('email: # required')
+        lines.append('roles:\n  - # required')
+        lines.append('default-view: ')
+        lines.append('avatar: ')
+
+        return lines
+
+    def _view_template(self):
+        lines = []
+
+        lines.append('name: # required')
+        lines.append('description: >\n  ')
+        lines.append('lanes:\n  - # required')
+
+        return lines
