@@ -19,6 +19,7 @@
 
 import apps
 import commands
+import loaders
 import names
 import rendering
 import setup
