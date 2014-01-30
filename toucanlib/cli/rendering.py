@@ -805,3 +805,119 @@ class ShowRenderer(object):
         renderer_class = renderer_classes[name]
         renderer = renderer_class(self.service, self.commit)
         renderer.render(stream, objects)
+
+
+class TemplateRenderer(object):
+
+    """Render an object template to a text stream."""
+
+    def __init__(self, service):
+        """Initialise a TemplateRenderer."""
+        self.service = service
+
+    def render(self, stream, klass, data={}):
+        """Render a template to a stream."""
+        templates = {
+            'attachment': self._attachment_template,
+            'card': self._card_template,
+            'comment': self._comment_template,
+            'lane': self._lane_template,
+            'milestone': self._milestone_template,
+            'reason': self._reason_template,
+            'user': self._user_template,
+            'view': self._view_template
+        }
+
+        template = templates[klass]
+        lines = template(data)
+        lines.append(
+            '# To cancel this action, remove all content from this file')
+        for line in lines:
+            stream.write(line + '\n')
+
+    def _attachment_template(self):
+        raise NotImplementedError
+
+    def _card_template(self, data):
+        lines = []
+        lines.append('title: %s # required' % data.get('title', ''))
+        lines.append('description: >\n  %s' % data.get('description', ''))
+        lines.append('creator: %s # required' % data.get('creator', ''))
+        lines.append('lane: %s # required' % data.get('lane', ''))
+        lines.append('reason: %s # required' % data.get('reason', ''))
+        lines.append('milestone: %s' % data.get('milestone', ''))
+        if not len(data.get('assignees', [])):
+            lines.append('assignees:\n  - ')
+        else:
+            lines.append('assignees:')
+        for assignee in data.get('assignees', []):
+            lines.append('  - %s' % assignee)
+        return lines
+
+    def _comment_template(self, data):
+        lines = []
+        lines.append('card: %s # required - the short uuid of the card '
+                     'that you are commenting on' % data.get('card', ''))
+        lines.append('author: %s # required' % data.get('author', ''))
+        lines.append('comment: >\n  %s # required' % data.get('comment', ''))
+        return lines
+
+    def _lane_template(self, data):
+        lines = []
+        lines.append('name: %s # required' % data.get('name', ''))
+        lines.append('description: >\n  %s' % data.get('description', ''))
+        if not len(data.get('views', [])):
+            lines.append('views:\n  -  # required')
+        else:
+            lines.append('views:')
+        for view in data.get('views', []):
+            lines.append('  - %s # required' % view)
+        if not len(data.get('cards', [])):
+            lines.append('cards:\n  - ')
+        else:
+            lines.append('cards:')
+        for card in data.get('cards', []):
+            lines.append('  - %s' % card)
+        return lines
+
+    def _milestone_template(self, data):
+        lines = []
+        lines.append('short-name: %s # required' % data.get('short-name', ''))
+        lines.append('name: %s # required' % data.get('name', ''))
+        lines.append('description: >\n  %s' % data.get('description', ''))
+        lines.append(
+            'deadline: %s # required - YYYY-MM-DD' % data.get('deadline', ''))
+        return lines
+
+    def _reason_template(self, data):
+        lines = []
+        lines.append('short-name: %s # required' % data.get('short-name', ''))
+        lines.append('name: %s # required' % data.get('name', ''))
+        lines.append('description: >\n  %s' % data.get('description', ''))
+        return lines
+
+    def _user_template(self, data):
+        lines = []
+        lines.append('name: %s # required' % data.get('name', ''))
+        lines.append('email: %s # required' % data.get('email', ''))
+        if not len(data.get('roles', [])):
+            lines.append('roles:\n  -  # required')
+        else:
+            lines.append('roles:')
+        for role in data.get('roles', []):
+            lines.append('  - %s # required' % role)
+        lines.append('default-view: %s' % data.get('default-view', ''))
+        lines.append('avatar: %s' % data.get('avatar', ''))
+        return lines
+
+    def _view_template(self, data):
+        lines = []
+        lines.append('name: %s # required' % data.get('name', ''))
+        lines.append('description: >\n  %s' % data.get('name', ''))
+        if not len(data.get('lanes', [])):
+            lines.append('lanes:\n  -  # required')
+        else:
+            lines.append('lanes:')
+        for lane in data.get('lanes', []):
+            lines.append('  - %s # required' % lane)
+        return lines
