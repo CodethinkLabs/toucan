@@ -22,6 +22,7 @@ import consonant
 import os
 import pygit2
 import sys
+import subprocess
 
 import toucanlib
 
@@ -116,3 +117,70 @@ class ShowCommand(object):
         if not objects:
             self.app.output.write(
                     'No objects found matching %s.\n' % self.patterns)
+
+
+class AddCommand(object):
+
+    """Command to add an object to a toucan board."""
+
+    def __init__(self, app, service_url, klass):
+        self.app = app
+        self.service_url = service_url
+        self.klass = klass
+
+    def _make_template_file(self, service):
+        # make directory and build file path
+        os.system('mkdir /tmp/toucan/')
+        file_path = '/tmp/toucan/%s.yaml' % self.klass
+
+        # write a template of the class into the file
+        f = open(file_path, 'w+')
+        renderer = toucanlib.cli.rendering.TemplateRenderer(service)
+        renderer.render(f, self.klass)
+        f.close()
+
+        return file_path
+
+    def _open_template_file(self, file_path):
+        editor = os.environ.get('EDITOR')
+        if editor:
+            editor = editor.split()
+            editor.append(file_path)
+            p = subprocess.Popen(editor)
+        else:
+            p = subprocess.Popen(['vi', file_path])
+
+        return p
+
+    def run(self):
+        """Add an object to a board."""
+
+        # get a Consonant service
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # get the latest commit
+        commit = service.ref('master').head
+
+        # create a temporary file
+        file_path = self._make_template_file(service)
+
+        # open it in an editor subprocess
+        p = self._open_template_file(file_path)
+        p.wait()
+
+        # create an object loader to parse the input
+        loader = toucanlib.cli.loaders.ObjectLoader(file_path, service, commit)
+
+        with consonant.util.phase.Phase() as phase:
+            loader.load(phase)
+            loader_phase = toucanlib.cli.loaders.Phase()
+            while not loader.validate(self.klass, loader_phase):
+                self.app.output.write(
+                    "Error adding %s, please revise input.\n" % self.klass)
+                p = self._open_template_file(file_path)
+                p.wait()
+                loader.load(phase)
+            loader.create(self.klass, phase)
+            self.app.output.write("Added a %s.\n" % self.klass)
+            os.system('rm -rf /tmp/toucan/')
