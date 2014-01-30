@@ -22,6 +22,8 @@ import consonant
 import os
 import pygit2
 import sys
+import subprocess
+import tempfile
 
 import toucanlib
 
@@ -116,3 +118,75 @@ class ShowCommand(object):
         if not objects:
             self.app.output.write(
                     'No objects found matching %s.\n' % self.patterns)
+
+
+class AddCommand(object):
+
+    """Command to add an object to a toucan board."""
+
+    def __init__(self, app, service_url, klass):
+        self.app = app
+        self.service_url = service_url
+        self.klass = klass
+
+    def run(self):
+        """Add an object to a board."""
+
+        # get a Consonant service
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # get the latest commit
+        commit = service.ref('master').head
+
+        # create a temporary file
+        with tempfile.NamedTemporaryFile() as f:
+            renderer = toucanlib.cli.rendering.TemplateRenderer(service)
+            renderer.render(f, self.klass)
+            f.flush()
+
+            # get initial input
+            self._run_editor(f.name)
+
+            # create an object loader to parse the input
+            loader = toucanlib.cli.loaders.ObjectLoader(
+                f.name, service, commit)
+
+            with toucanlib.cli.loaders.Phase() as phase:
+                if loader.load():
+                    while not loader.validate(self.klass, phase):
+                        self.app.output.write(
+                            "Error adding %s, please revise input.\n" % self.klass)
+                        # Re-open the temporary file.
+                        # This will only work on UNIX systems, and a better solution
+                        # should be found in future. Without doing this, some
+                        # editors (gedit) cause no data to be written to the file
+                        # and no exceptions to be raised.
+                        with open(f.name, 'w+') as t:
+                            for error in phase.errors:
+                                t.write('# %s\n' % error)
+                            phase.errors = []
+                            t.write('#\n')
+                            renderer.render(t, self.klass, loader.data)
+                            t.flush()
+                        self._run_editor(f.name)
+                        if not loader.load():
+                            self.app.output.write(
+                                'Cancelled addition of %s.\n' % self.klass)
+                            return False
+                    loader.create(self.klass, phase)
+                    self.app.output.write("Added a %s.\n" % self.klass)
+                    return True
+                else:
+                    self.app.output.write(
+                        'Cancelled addition of %s.\n' % self.klass)
+                    return False
+
+    def _run_editor(self, file_path):
+        editor = os.environ.get('EDITOR')
+        if editor:
+            command = editor.split()
+            command.append(file_path)
+            subprocess.check_call(command)
+        else:
+            subprocess.check_call(['vi', file_path])
