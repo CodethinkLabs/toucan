@@ -2,6 +2,7 @@ toucanlib/__init__.py
 toucanlib/cli/__init__.py
 toucanlib/cli/apps.py
 toucanlib/cli/commands.py
+toucanlib/cli/loaders.py
 toucanlib/cli/names.py
 toucanlib/cli/rendering.py
 toucanlib/cli/setup.py
