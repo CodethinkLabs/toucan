@@ -142,10 +142,30 @@ with open('stdout', 'r') as stream:
         raise Exception('The output produced was not of the expected form.')
     else:
         data = [item for item in output if item]
-        print data
         $CODE
 EOF
     if ! python test.py 2>&1 >/dev/null; then
         py.test -q test.py
     fi
 }
+
+test_object_in_store()
+{
+    trap dump_output 0
+    cd $DATADIR
+    CODE=$(cat)
+    run_consonant_store_test <<-EOF
+with open('last_obj', 'r') as obj_file:
+    contents = obj_file.readlines()
+    err = obj_file.read()
+if contents:
+    data = contents[0].split(':')
+    print data
+    commit = store.ref('master').head
+    klass = store.klass(commit, data[0])
+    obj = [o for o in store.objects(commit, klass)
+           if o.get(data[1], '') == data[2].strip()][0]
+    $CODE
+EOF
+}
+
