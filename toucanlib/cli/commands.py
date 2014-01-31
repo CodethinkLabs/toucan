@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Codethink Limited.
+# Copyright (C) 2013-2014 Codethink Limited.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -23,8 +23,14 @@ import os
 import pygit2
 import sys
 import subprocess
+import time
 
 import toucanlib
+
+from consonant.store import properties
+from consonant.transaction import actions, transaction
+from consonant.util import expressions, gitcli
+from consonant.util.phase import Phase
 
 
 class SetupCommand(object):
@@ -184,3 +190,122 @@ class AddCommand(object):
             loader.create(self.klass, phase)
             self.app.output.write("Added a %s.\n" % self.klass)
             os.system('rm -rf /tmp/toucan/')
+
+
+class MoveCommand(object):
+
+    """Command to move a card to a lane in a Toucan board."""
+
+    def __init__(self, app, service_url, card, lane):
+        self.app = app
+        self.service_url = service_url
+        self.card = card
+        self.lane = lane
+        self.name_gen = toucanlib.cli.names.NameGenerator()
+
+    def run(self):
+        """Move a card to a lane in a board."""
+
+        # get a Consonant service
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        # get the latest commit
+        commit = service.ref('master').head
+
+        # get the specified card and lane
+        klass = service.klass(commit, 'card')
+        cards = [x for x in service.objects(commit, klass)
+                 if self.name_gen.presentable_name(x) == self.card]
+        if not len(cards):
+            raise cliapp.AppException(
+                'Did not move card: %s does not exist.' % self.card)
+        klass = service.klass(commit, 'lane')
+        lanes = [x for x in service.objects(commit, klass)
+                 if self.name_gen.presentable_name(x) == self.lane]
+        if not len(lanes):
+            raise cliapp.AppException(
+                'Did not move card: %s does not exist.' % self.lane)
+        card = cards[0]
+        lane = lanes[0]
+
+        # check that the card is not already in the specfied lane
+        original_lane = service.resolve_reference(card['lane'])
+        if original_lane == lane:
+            raise cliapp.AppException(
+                'Did not move card: %s is already in %s.' %
+                (self.card, self.lane))
+        else:
+            self._move_card(service, commit, card, lane, original_lane)
+
+            # confirm card movement
+            old_lane_name = self.name_gen.presentable_name(original_lane)
+            new_lane_name = self.name_gen.presentable_name(lane)
+            card_name = self.name_gen.presentable_name(card)
+            self.app.output.write(
+                'Moved %s from %s to %s.\n' %
+                (card_name, old_lane_name, new_lane_name))
+
+    def _move_card(self, service, commit, card, lane, original_lane):
+        act = []
+        begin_action = actions.BeginAction('begin', commit.sha1)
+        act.append(begin_action)
+
+        # update lane reference
+        ref = properties.ReferenceProperty('lane', {'uuid': lane.uuid})
+        props = [ref]
+        act.append(actions.UpdateAction(
+            'move-%s' % card.uuid, card.uuid, None, props))
+
+        # add card to new lane
+        act += self._add_card_to_lane(service, commit, card, lane)
+
+        # remove card from old lane
+        act += self._remove_card_from_lane(
+            service, commit, card, original_lane)
+
+        # set commit signature
+        author = pygit2.Signature(
+            gitcli.subcommand(service.repo, ['config', 'user.name']),
+            gitcli.subcommand(service.repo, ['config', 'user.email']))
+
+        # make the commit action
+        commit_action = actions.CommitAction(
+            'commit', 'refs/heads/master',
+            '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
+            '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
+            'Move %s from %s to %s' %
+            (self.card, self.name_gen.presentable_name(original_lane),
+             self.lane))
+        act.append(commit_action)
+
+        # apply transaction
+        t = transaction.Transaction(act)
+
+        service.apply_transaction(t)
+
+    def _add_card_to_lane(self, service, commit, card, lane):
+        act = []
+        lane_cards = lane.get('cards', [])
+        lane_cards.append(properties.ReferenceProperty(
+            'cards', {'uuid': card.uuid}))
+        lane_props = [properties.ListProperty('cards', lane_cards)]
+        act.append(actions.UpdateAction(
+            'update-%s' % lane.uuid, lane.uuid, None, lane_props))
+
+        return act
+
+    def _remove_card_from_lane(self, service, commit, card, lane):
+        act = []
+        card_refs = lane.get('cards', [])
+        lane_cards = [service.resolve_reference(r.value) for r in card_refs]
+        new_cards = []
+        for c in lane_cards:
+            if c.uuid != card.uuid:
+                new_cards.append(properties.ReferenceProperty(
+                    'cards', {'uuid': c.uuid}))
+        lane_props = [properties.ListProperty('cards', new_cards)]
+        act.append(actions.UpdateAction(
+            'update-%s' % lane.uuid, lane.uuid, None, lane_props))
+
+        return act
