@@ -236,7 +236,7 @@ class ObjectLoader():
             for card in cards:
                 uuid = card.uuid
                 references.append(properties.ReferenceProperty(
-                    'cards', uuid))
+                    'cards', {'uuid': uuid}))
                 # handle bidirectional reference
                 card_lane = card.properties['lane'].value
                 card_props = [properties.ReferenceProperty(
