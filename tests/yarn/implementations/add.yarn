@@ -1,0 +1,209 @@
+Set up a board
+--------------
+
+    IMPLEMENTS GIVEN a toucan board
+
+    cat <<-EOF > "$DATADIR/setup.yaml"
+    name: example.board
+    schema: org.consonant-project.toucan.schema.0
+    info:
+        name: Example board
+        description: This is an example board
+    lanes:
+      - name: Backlog
+        description: Backlog lane
+      - name: Doing
+        description: Doing lane
+      - name: Review
+        description: Review lane
+      - name: Done
+        description: Done lane
+    views:
+      - name: Default
+        description: Default view
+        lanes:
+          - Backlog
+          - Doing
+          - Review
+          - Done
+      - name: Secondary
+        description: Secondary view
+        lanes:
+          - Backlog
+          - Doing
+    users:
+      - name: Test User
+        email: test@test.org
+        roles:
+          - admin
+    reasons:
+      - short-name: testing
+        name: A test reason for testing
+    milestones:
+      - short-name: testing
+        name: A test milestone for testing
+        deadline: 0000000000 +0000
+    EOF
+
+    run_toucan_cli <<-EOF
+    setup "$DATADIR/setup.yaml" "$DATADIR/board"
+    EOF
+
+Set the environment variable EDITOR
+-----------------------------------
+
+    IMPLEMENTS GIVEN the environment variable EDITOR points to the script "(.+)"
+
+    export EDITOR="$MATCH_1"
+
+Run toucan add
+--------------
+
+    IMPLEMENTS WHEN running "toucan add ?(.*)"
+
+    run_toucan_cli <<-EOF
+    add "$DATADIR/board" $MATCH_1
+    EOF
+
+Check the output for confirmation of an object
+----------------------------------------------
+
+    IMPLEMENTS THEN the output includes confirmation of a new (.+)
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    object=$(grep "Added a $MATCH_2" "$DATADIR/stdout" | wc -l)
+    test $object -eq 1
+
+Check for an object in a board
+------------------------------
+
+    IMPLEMENTS THEN the board includes a (.+) with the (.+) "(.+)"
+
+    rm $DATADIR/last_obj
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, '$MATCH_1')
+    objects = store.objects(commit, klass)
+    assert len([o for o in objects if o.get('$MATCH_2', '') == '$MATCH_3']) > 0
+    EOF
+    cat <<-EOF > "$DATADIR/last_obj"
+    $MATCH_2:$MATCH_3
+    EOF
+
+Check for object property
+-------------------------
+
+    IMPLEMENTS THEN the same (.+) has the (.+) "(.+)"
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, '$MATCH_1')
+    objects = store.objects(commit, klass)
+    obj_file = open('$DATADIR/last_obj', 'r')
+    contents = obj_file.read_lines()
+    obj_file.close()
+    if contents:
+        data = contents[0].split(':')
+        prop = data[0]
+        val = data[1]
+        obj = [o for o in objects if o.get(prop, '') == val][0]
+        assert obj.get('$MATCH_2', '') == '$MATCH_3'
+    else:
+        raise Exception('no data')
+    EOF
+
+Check for object property that is a reference
+---------------------------------------------
+
+    IMPLEMENTS THEN the same (.+) has a reference to the (.+) with (.+) "(.+)"
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, '$MATCH_1')
+    objects = store.objects(commit, klass)
+    obj_file = open('$DATADIR/last_obj', 'r')
+    contents = obj_file.read_lines()
+    obj_file.close()
+    if contents:
+        data = contents[0].split(':')
+        prop = data[0]
+        val = data[1]
+        obj = [o for o in objects if o.get(prop, '') == val][0]
+        ref = obj.get('$MATCH_2', ''), '')
+        if ref:
+            ref_obj = store.resolve_reference(item)
+            assert ref_obj.get('$MATCH_3', '') == '$MATCH_4'
+    else:
+        raise Exception('no data')
+    EOF
+
+Check for object property that is a list of references
+------------------------------------------------------
+
+    IMPLEMENTS THEN the same (.+) has a list reference to the (.+) with (.+) "(.+)"
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, '$MATCH_1')
+    objects = store.objects(commit, klass)
+    obj_file = open('$DATADIR/last_obj', 'r')
+    contents = obj_file.read_lines()
+    obj_file.close()
+    if contents:
+        data = contents[0].split(':')
+        prop = data[0]
+        val = data[1]
+        obj = [o for o in objects if o.get(prop, '') == val][0]
+        ref_list = obj.get('%ss' % $MATCH_2, ''), [])
+        if ref_list:
+            names = []
+            for item in ref_list:
+                ref = store.resolve_reference(item)
+                names.append(ref.get("$MATCH_3", ''))
+            assert '$MATCH_4' in names
+    else:
+        raise Exception('no data')
+    EOF
+
+Check if a user is an admin
+---------------------------
+
+    IMPLEMENTS THEN the same user is an admin
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, '$MATCH_1')
+    objects = store.objects(commit, klass)
+    obj_file = open('$DATADIR/last_obj', 'r')
+    contents = obj_file.read_lines()
+    obj_file.close()
+    if contents:
+        data = contents[0].split(':')
+        prop = data[0]
+        val = data[1]
+        obj = [o for o in objects if o.get(prop, '') == val][0]
+        roles = obj.get('roles', [])
+        assert 'admin' in roles
+    else:
+        raise Exception('no data')
+    EOF
+
+Check that an object property does not exist
+--------------------------------------------
+
+    IMPLEMENTS THEN the same (.+) has no (.+)
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, '$MATCH_1')
+    objects = store.objects(commit, klass)
+    obj_file = open('$DATADIR/last_obj', 'r')
+    contents = obj_file.read_lines()
+    obj_file.close()
+    if contents:
+        data = contents[0].split(':')
+        prop = data[0]
+        val = data[1]
+        obj = [o for o in objects if o.get(prop, '') == val][0]
+        assert obj.get('$MATCH_2', None) == None

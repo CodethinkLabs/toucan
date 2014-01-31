@@ -1,0 +1,133 @@
+Add objects to a toucan board
+=============================
+
+Add a new card to a toucan board
+--------------------------------
+
+    SCENARIO add a new card to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "card.sh"
+
+    WHEN     running "toucan add card"
+
+    THEN     the output includes confirmation of a new card
+    AND      the board includes a card with the title "Scenario Test"
+    AND      the same card has the description "This is a card created by the scenario test."
+    AND      the same card has a reference to the creator with name "Test User"
+    AND      the same card has a reference to the lane with name "Backlog"
+    AND      the same card has a reference to the reason with short-name "testing"
+    AND      the same card has a reference to the milestone with short-name "testing"
+    AND      the same card has a list reference to the assignee with name "Test User"
+
+Add a new comment to a card in a toucan board
+---------------------------------------------
+
+    SCENARIO add a comment to a card in a toucan board
+
+    GIVEN    a toucan board with a comment
+    AND      the environment variable EDITOR points to the script "comment.sh"
+
+    WHEN     running "toucan add comment"
+
+    THEN     the output includes confirmation of a new comment
+    AND      the board includes a comment with the comment "Scenario test comment"
+    AND      the same comment has a reference to the author with name "Test User"
+
+Add a new lane to a toucan board
+--------------------------------
+
+    SCENARIO add a new lane to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "lane.sh"
+
+    WHEN     running "toucan add lane"
+
+    THEN     the output includes confirmation of a new lane
+    AND      the board includes a lane with the name "Scenario"
+    AND      the same lane has the description "Scenario test lane"
+    AND      the same lane has a list reference to the view with name "Default"
+    AND      the same lane has 0 cards
+
+Add a new view to a toucan board
+--------------------------------
+
+    SCENARIO add a new view to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "view.sh"
+
+    WHEN     running "toucan add view"
+
+    THEN     the output includes confirmation of a new view
+    AND      the board includes a view with the name "Scenario"
+    AND      the same view includes the description "Scenario test view"
+    AND      the same view has a list reference to the lane with name "Backlog"
+    AND      the same view has a list reference to the lane with name "Doing"
+
+Add a new user to a toucan board
+--------------------------------
+
+    SCENARIO add a new user to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "user.sh"
+
+    WHEN     running "toucan add user"
+
+    THEN     the output includes confirmation of a new user
+    AND      the board includes a user with the name "Scenario Test"
+    AND      the same user has the email "scenario.test@test.org"
+    AND      the same user has the role "admin"
+    AND      the same user has a reference to the default-view with name "Default"
+    AND      the same user has no avatar
+
+Add a new reason to a toucan board
+----------------------------------
+
+    SCENARIO add a new reason to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "reason.sh"
+
+    WHEN     running "toucan add reason"
+
+    THEN     the output includes confirmation of a new reason
+    AND      the board includes a reason with the short-name "scenario"
+    AND      the same reason has the name "Scenario test reason"
+    AND      the same reason has the description "This is a reason made in a test."
+
+Add a new milestone to a toucan board
+-------------------------------------
+
+    SCENARIO add a new milestone to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "milestone.sh"
+
+    WHEN     running "toucan add milestone"
+
+    THEN     the output includes confirmation of a new milestone
+    AND      the board includes a milestone with the short-name "scenario"
+    AND      the same milestone has the name "Scenario test milestone"
+    AND      the same milestone has the description "This is a milestone made in a test."
+    AND      the same milestone has the deadline "1970-01-01"
+
+Attempt to add a new user to a toucan board
+-------------------------------------------
+
+    SCENARIO add a new user with bad input to a toucan board
+
+    GIVEN    a toucan board
+    AND      the environment variable EDITOR points to the script "user_bad.sh"
+
+    WHEN     running "toucan add user"
+
+    THEN     the output includes "Error adding user, please revise input."
+    AND      the output includes confirmation of a new user
+    AND      the board includes a user with the name "Scenario Test"
+    AND      the same user has the email "scenario.test@test.org"
+    AND      the same user is an admin
+    AND      the same user has a reference to the default-view with name "Default"
+    AND      the same user has no avatar
