@@ -1,0 +1,143 @@
+Add objects to a toucan board
+=============================
+
+Add a new card to a toucan board
+--------------------------------
+
+    SCENARIO add a new card to a toucan board
+
+    GIVEN    a toucan board
+
+    WHEN     creating a temporary file
+
+    AND      setting the title to "Scenario Test"
+    AND      setting the description to "This is a card created by the scenario test."
+    AND      setting the creator to "Test User"
+    AND      setting the lane to "Backlog"
+    AND      setting the reason to "Testing"
+    AND      setting the milestone to "Testing"
+    AND      setting the assignees to a list: "Test User"
+    AND      running "toucan add card"
+
+    THEN     the output includes confirmation of a new card
+    AND      the board includes a card with the title "Scenario Test"
+    AND      the same object has the description "This is a card created by the scenario test."
+    AND      the same object has a reference to the creator with name "Test User"
+    AND      the same object has a reference to the lane with name "Backlog"
+    AND      the same object has a reference to the reason with short-name "testing"
+    AND      the same object has a reference to the milestone with short-name "testing"
+    AND      the same object has a list reference to the assignee with name "Test User"
+
+Add a new comment to a card in a toucan board
+---------------------------------------------
+
+    SCENARIO add a comment to a card in a toucan board
+
+    GIVEN    a toucan board with a card
+
+    WHEN     creating a temporary file
+    AND      setting the author to "Test User"
+    AND      setting the comment to "Scenario test comment."
+    AND      setting the card reference
+    AND      running "toucan add comment"
+
+    THEN     the output includes confirmation of a new comment
+    AND      the board includes a comment with the comment "Scenario test comment."
+    AND      the same object has a reference to the author with name "Test User"
+
+Add a new lane to a toucan board
+--------------------------------
+
+    SCENARIO add a new lane to a toucan board
+
+    GIVEN    a toucan board
+
+    WHEN     creating a temporary file
+    AND      setting the name to "Scenario"
+    AND      setting the description to "Scenario test lane"
+    AND      setting the views to a list: "Default"
+    AND      running "toucan add lane"
+
+    THEN     the output includes confirmation of a new lane
+    AND      the board includes a lane with the name "Scenario"
+    AND      the same object has the description "Scenario test lane"
+    AND      the same object has a list reference to the view with name "Default"
+    AND      the same object has 0 cards
+
+Add a new view to a toucan board
+--------------------------------
+
+    SCENARIO add a new view to a toucan board
+
+    GIVEN    a toucan board
+
+    WHEN     creating a temporary file
+    AND      setting the name to "Scenario"
+    AND      setting the description to "Scenario test view"
+    AND      setting the lanes to a list: "Backlog, Doing"
+    AND      running "toucan add view"
+
+    THEN     the output includes confirmation of a new view
+    AND      the board includes a view with the name "Scenario"
+    AND      the same object has the description "Scenario test view"
+    AND      the same object has a list reference to the lane with name "Backlog"
+    AND      the same object has a list reference to the lane with name "Doing"
+
+Add a new user to a toucan board
+--------------------------------
+
+    SCENARIO add a new user to a toucan board
+
+    GIVEN    a toucan board
+
+    WHEN     creating a temporary file
+    AND      setting the name to "Scenario Test"
+    AND      setting the email to "scenario.test@test.org"
+    AND      setting the roles to a list: "admin"
+    AND      setting the default-view to "Default"
+    AND      running "toucan add user"
+
+    THEN     the output includes confirmation of a new user
+    AND      the board includes a user with the name "Scenario Test"
+    AND      the same object has the email "scenario.test@test.org"
+    AND      the same object has a list of roles containing "admin"
+    AND      the same object has a reference to the default-view with name "Default"
+    AND      the same object has no avatar
+
+Add a new reason to a toucan board
+----------------------------------
+
+    SCENARIO add a new reason to a toucan board
+
+    GIVEN    a toucan board
+
+    WHEN     creating a temporary file
+    AND      setting the short-name to "scenario"
+    AND      setting the name to "Scenario test reason"
+    AND      setting the description to "This is a reason made in a test."
+    AND      running "toucan add reason"
+
+    THEN     the output includes confirmation of a new reason
+    AND      the board includes a reason with the short-name "scenario"
+    AND      the same object has the name "Scenario test reason"
+    AND      the same object has the description "This is a reason made in a test."
+
+Add a new milestone to a toucan board
+-------------------------------------
+
+    SCENARIO add a new milestone to a toucan board
+
+    GIVEN    a toucan board
+
+    WHEN     creating a temporary file
+    AND      setting the short-name to "scenario"
+    AND      setting the name to "Scenario test milestone"
+    AND      setting the description to "This is a milestone made in a test."
+    AND      setting the deadline to "0000000000 +0000"
+    AND      running "toucan add milestone"
+
+    THEN     the output includes confirmation of a new milestone
+    AND      the board includes a milestone with the short-name "scenario"
+    AND      the same object has the name "Scenario test milestone"
+    AND      the same object has the description "This is a milestone made in a test."
+    AND      the same object has a timestamp representing the deadline: "1970-01-01"
