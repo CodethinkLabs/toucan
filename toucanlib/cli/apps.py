@@ -86,3 +86,18 @@ class Toucan(cliapp.Application):
         # Run add command
         cmd = toucanlib.cli.commands.AddCommand(self, board, klass)
         cmd.run()
+
+    def cmd_move(self, args):
+        """Move a card to a lane in a Toucan board."""
+
+        # If there are not enough arguments then raise an exception
+        if len(args) < 3:
+            raise cliapp.AppException(
+                'Usage: toucan move BOARD CARD LANE')
+
+        board = args[0]
+        card = args[1]
+        lane = args[2]
+
+        cmd = toucanlib.cli.commands.MoveCommand(self, board, card, lane)
+        cmd.run()
