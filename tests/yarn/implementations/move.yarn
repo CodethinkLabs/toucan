@@ -1,0 +1,148 @@
+Set up a board
+--------------
+
+    IMPLEMENTS GIVEN a toucan board
+
+    cat <<-EOF > "$DATADIR/setup.yaml"
+    name: example.board
+    schema: org.consonant-project.toucan.schema.0
+    info:
+        name: Example board
+        description: This is an example board
+    lanes:
+      - name: Backlog
+        description: Backlog lane
+        views:
+          - Default
+          - Secondary
+        cards:
+          - 0
+      - name: Doing
+        description: Doing lane
+        views:
+          - Default
+          - Secondary
+      - name: Review
+        description: Review lane
+        views:
+          - Default
+      - name: Done
+        description: Done lane
+        views:
+          - Default
+    views:
+      - name: Default
+        description: Default view
+        lanes:
+          - Backlog
+          - Doing
+          - Review
+          - Done
+      - name: Secondary
+        description: Secondary view
+        lanes:
+          - Backlog
+          - Doing
+    users:
+      - name: Test User
+        email: test@test.org
+        roles:
+          - admin
+    reasons:
+      - short-name: testing
+        name: A test reason for testing
+    milestones:
+      - short-name: testing
+        name: A test milestone for testing
+        deadline: 0000000000 +0000
+    cards:
+      - id: 0
+        title: Implement x for foo
+        description: >
+          Implementation detail of x for the feature named foo.
+        creator: Test User
+        lane: Backlog
+        reason: xyz
+        milestone: xyz
+        assignees:
+          - Test User
+    EOF
+
+    run_toucan_cli <<-EOF
+    setup "$DATADIR/setup.yaml" "$DATADIR/board"
+    EOF
+
+Get a card uuid
+---------------
+
+    IMPLEMENTS GIVEN a card uuid
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, 'card')
+    objects = store.objects(commit, klass)
+    obj = objects[0]
+    f = open('$DATADIR/uuid', 'w+')
+    f.write(obj.uuid[0:7])
+    f.close()
+
+Get a fake uuid
+---------------
+
+    IMPLEMENTS GIVEN a fake uuid
+
+    run_python_test <<-EOF
+    import uuid
+    f = open('$DATADIR/uuid', 'w+')
+    f.write(uuid.uuid4().hex[0:7])
+    f.close()
+
+Run toucan move
+---------------
+
+    IMPLEMENTS WHEN running "toucan move card/uuid (.+)"
+
+    uuid=$(grep "[:alnum:]" "$DATADIR/uuid")
+    run_toucan_cli <<-EOF
+    add "$DATADIR/board" card/$uuid $MATCH_1
+    EOF
+
+Check the card reference
+------------------------
+
+    IMPLEMENTS THEN the card now has a reference to a (.+) with (.+) "(.+)"
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, 'card')
+    objects = store.objects(commit, klass)
+    obj = objects[0]
+    lane = store.resolve_reference(obj['$MATCH_1'])
+    assert lane.get('$MATCH_2', '') == $MATCH_3
+
+Check the lane's card references
+--------------------------------
+
+    IMPLEMENTS THEN the lane with the (.+) "(.+)" now has a reference in the list "(.+)" to the moved card
+
+    run_consonant_store_test <<-EOF
+    commit = store.ref('master').head
+    klass = store.klass(commit, 'lane')
+    objects = store.objects(commit, klass)
+    obj = [o for o in objects if o['$MATCH_1'] == $MATCH_2
+    f = open('$DATADIR/uuid', 'r')
+    uuid = f.read_line()
+    f.close()
+    uuids = []
+    for ref in obj.get('$MATCH_3', []):
+        card = store.resolve_reference(ref)
+        uuids.append(card.uuid[0:7])
+    assert uuid in uuids
+
+Check the error message
+-----------------------
+
+    cat $DATADIR/stdout
+    cat $DATADIR/stderr
+    err=$(grep "Did not move card" "$DATADIR/stdout" | wc -l)
+    test $err -eq 1

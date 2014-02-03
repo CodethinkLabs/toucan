@@ -1,0 +1,56 @@
+Move cards between lanes in a toucan board
+==========================================
+
+Check a correct move between two lanes
+--------------------------------------
+
+    SCENARIO move a card from one lane to a different lane
+
+    GIVEN    a toucan board
+    AND      a card uuid
+
+    WHEN     running "toucan move card/uuid lane/doing"
+
+    THEN     the card now has a reference to a lane with name "Doing"
+    AND      the lane with name "Backlog" now has no reference in the list "cards" to the moved card
+    AND      the lane with name "Doing" now has a reference in the list "cards" to the moved card
+
+Check for error handling when the card is already in the lane
+-------------------------------------------------------------
+
+    SCENARIO move a card from one lane to the same lane
+
+    GIVEN    a toucan board
+    AND      a card uuid
+
+    WHEN     running "toucan move card/uuid lane/backlog"
+
+    THEN     the card now has a reference to a lane with name "Backlog"
+    AND      the lane with name "Backlog" now has a reference in the list "cards" to the moved card
+    AND      the output includes an error which says "Did not move card"
+
+Check for error handling when the card does not exist
+-----------------------------------------------------
+
+    SCENARIO move a non-existant card to a lane
+
+    GIVEN    a toucan board
+    AND      a fake uuid
+
+    WHEN     running "toucan move card/uuid lane/doing"
+
+    THEN     the output includes an error which says "Did not move card"
+
+Check for error handling when the lane does not exist
+-----------------------------------------------------
+
+    SCENARIO move a card to a non-existant lane
+
+    GIVEN    a toucan board
+    AND      a card uuid
+
+    WHEN     running "toucan move card/uuid lane/notalane"
+
+    THEN     the lane with name "Backlog" now has a reference in the list cards to the moved card
+    AND      the card now has a reference to a lane with name "Backlog"
+    AND      the output includes an error which says "Did not move card"
