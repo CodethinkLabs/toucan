@@ -88,7 +88,7 @@ class ListCommand(object):
         objects = resolver.resolve_patterns(self.patterns, None)
 
         # render objects to the standard output
-        renderer = toucanlib.cli.rendering.ListRenderer(service)
+        renderer = toucanlib.cli.rendering.ListRenderer(service, commit)
         renderer.render(self.app.output, objects)
 
 

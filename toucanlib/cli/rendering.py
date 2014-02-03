@@ -25,8 +25,9 @@ class ObjectClassListRenderer(object):
 
     """Render the objects of a class to a text stream."""
 
-    def __init__(self, service):
+    def __init__(self, service, commit):
         self.service = service
+        self.commit = commit
 
     def render(self, stream, objects):
         """Render a list of objects to a text stream."""
@@ -53,6 +54,72 @@ class ObjectClassListRenderer(object):
                 stream.write('%s\n' % (format_string % row))
 
 
+class AttachmentListRenderer(ObjectClassListRenderer):
+
+    """Render lists of attachment objects to a text stream."""
+
+    def render(self, stream, attachments):
+        """Render a list of attachments to a text stream."""
+
+        name_gen = toucanlib.cli.names.NameGenerator()
+        rows = []
+        for attachment in attachments:
+            comment = self.service.resolve_reference(attachment['comment'])
+            rows.append(('attachment',
+                         attachment['name'],
+                         name_gen.presentable_name(comment)))
+        self.render_rows(stream, rows)
+
+
+class CardListRenderer(ObjectClassListRenderer):
+
+    """Render lists of card objects to a text stream."""
+
+    def render(self, stream, cards):
+        """Render a list of cards to a text stream."""
+
+        name_gen = toucanlib.cli.names.NameGenerator()
+        rows = []
+        for card in cards:
+            if 'assignees' in card:
+                num_assignees = len(card['assignees'])
+            else:
+                num_assignees = 0
+            lane = self.service.resolve_reference(card['lane'])
+            # truncate the title
+            card_title = card['title']
+            if len(card_title) > 30:
+                card_title = card_title[0:30] + '...'
+            rows.append(('card',
+                         name_gen.card_id(card),
+                         card_title,
+                         lane['name'],
+                         '%s assignees' % num_assignees))
+        self.render_rows(stream, rows)
+
+
+class CommentListRenderer(ObjectClassListRenderer):
+
+    """Render lists of comment objects to a text stream."""
+
+    def render(self, stream, comments):
+        """Render a list of comments to a text stream."""
+
+        name_gen = toucanlib.cli.names.NameGenerator()
+        rows = []
+        for comment in comments:
+            card = self.service.resolve_reference(comment['card'])
+            # truncate the comment
+            content = comment['comment']
+            if len(content) > 45:
+                content = content[0:42] + '...'
+            rows.append(('comment',
+                         name_gen.comment_id(comment),
+                         content,
+                         name_gen.presentable_name(card)))
+        self.render_rows(stream, rows)
+
+
 class InfoListRenderer(ObjectClassListRenderer):
 
     """Render lists of info objects to a text stream."""
@@ -65,26 +132,6 @@ class InfoListRenderer(ObjectClassListRenderer):
             rows.append(('info',
                          info.properties['name'].value,
                          info.properties['description'].value.strip()))
-        self.render_rows(stream, rows)
-
-
-class ViewListRenderer(ObjectClassListRenderer):
-
-    """Render lists of view objects to a text stream."""
-
-    def render(self, stream, views):
-        """Render a list of views to a text stream."""
-
-        rows = []
-        for view in sorted(views, key=lambda l: l.properties['name'].value):
-            if 'lanes' in view.properties:
-                num_lanes = len(view.properties['lanes'].value)
-            else:
-                num_lanes = 0
-            rows.append(('view',
-                         view.properties['name'].value,
-                         view.properties['description'].value.strip(),
-                         '%d lanes' % num_lanes))
         self.render_rows(stream, rows)
 
 
@@ -108,6 +155,62 @@ class LaneListRenderer(ObjectClassListRenderer):
         self.render_rows(stream, rows)
 
 
+class MilestoneListRenderer(ObjectClassListRenderer):
+
+    """Render lists of milestone objects to a text stream."""
+
+    def render(self, stream, milestones):
+        """Render a list of milestones to a text stream."""
+
+        rows = []
+        klass = self.service.klass(self.commit, 'card')
+        all_cards = self.service.objects(self.commit, klass)
+        for milestone in milestones:
+            cards = []
+            for x in all_cards:
+                if x.get('milestone', ''):
+                    m = self.service.resolve_reference(x['milestone'])
+                    if m == milestone:
+                        cards.append(x)
+            if cards:
+                num_cards = len(cards)
+            else:
+                num_cards = 0
+            milestone_name = milestone['name']
+            if len(milestone_name) > 30:
+                milestone_name = milestone_name[0:27] + '...'
+            rows.append(('milestone',
+                         milestone['short-name'],
+                         milestone_name,
+                         milestone['deadline'].value.date().isoformat(),
+                         '%s cards' % num_cards))
+        self.render_rows(stream, rows)
+
+
+class ReasonListRenderer(ObjectClassListRenderer):
+
+    """Render lists of reason objects to a text stream."""
+
+    def render(self, stream, reasons):
+        """Render a list of reasons to a text stream."""
+
+        rows = []
+        klass = self.service.klass(self.commit, 'card')
+        all_cards = self.service.objects(self.commit, klass)
+        for reason in reasons:
+            cards = [x for x in all_cards
+                     if self.service.resolve_reference(x['reason']) == reason]
+            if cards:
+                num_cards = len(cards)
+            else:
+                num_cards = 0
+            rows.append(('reason',
+                         reason['short-name'],
+                         reason['name'],
+                         '%s cards' % num_cards))
+        self.render_rows(stream, rows)
+
+
 class UserListRenderer(ObjectClassListRenderer):
 
     """Render lists of user objects to a text stream."""
@@ -125,37 +228,33 @@ class UserListRenderer(ObjectClassListRenderer):
         self.render_rows(stream, rows)
 
 
-class UserConfigListRenderer(ObjectClassListRenderer):
+class ViewListRenderer(ObjectClassListRenderer):
 
-    """Render lists of user config objects to a text stream."""
+    """Render lists of view objects to a text stream."""
 
-    def render(self, stream, configs):
-        """Render a list of user configs to a text stream."""
+    def render(self, stream, views):
+        """Render a list of views to a text stream."""
 
         rows = []
-        for config in sorted(configs, key=self._sort_key):
-            user = self.service.resolve_reference(
-                config.properties['user'].value)
-            if 'default-view' in config.properties:
-                default_view = config.properties['default-view'].value
+        for view in sorted(views, key=lambda l: l.properties['name'].value):
+            if 'lanes' in view.properties:
+                num_lanes = len(view.properties['lanes'].value)
             else:
-                default_view = ''
-            rows.append(('user-config',
-                         user.properties['name'].value,
-                         default_view))
+                num_lanes = 0
+            rows.append(('view',
+                         view.properties['name'].value,
+                         view.properties['description'].value.strip(),
+                         '%d lanes' % num_lanes))
         self.render_rows(stream, rows)
-
-    def _sort_key(self, config):
-        user = self.service.resolve_reference(config.properties['user'].value)
-        return user.properties['name'].value
 
 
 class ListRenderer(object):
 
     """Render lists of objects to a text stream."""
 
-    def __init__(self, service):
+    def __init__(self, service, commit):
         self.service = service
+        self.commit = commit
 
     def render(self, stream, objects):
         """Render a list of objects to a text stream."""
@@ -177,20 +276,32 @@ class ListRenderer(object):
         render_group_func = '_render_%s_group' % name.replace('-', '_')
         getattr(self, render_group_func)(stream, objects)
 
+    def _render_attachment_group(self, stream, objects):
+        return AttachmentListRenderer(self.service, self.commit).render(stream, objects)
+
+    def _render_card_group(self, stream, objects):
+        return CardListRenderer(self.service, self.commit).render(stream, objects)
+
+    def _render_comment_group(self, stream, objects):
+        return CommentListRenderer(self.service, self.commit).render(stream, objects)
+
     def _render_info_group(self, stream, objects):
-        return InfoListRenderer(self.service).render(stream, objects)
+        return InfoListRenderer(self.service, self.commit).render(stream, objects)
 
     def _render_lane_group(self, stream, objects):
-        return LaneListRenderer(self.service).render(stream, objects)
+        return LaneListRenderer(self.service, self.commit).render(stream, objects)
 
-    def _render_view_group(self, stream, objects):
-        return ViewListRenderer(self.service).render(stream, objects)
+    def _render_milestone_group(self, stream, objects):
+        return MilestoneListRenderer(self.service, self.commit).render(stream, objects)
+
+    def _render_reason_group(self, stream, objects):
+        return ReasonListRenderer(self.service, self.commit).render(stream, objects)
 
     def _render_user_group(self, stream, objects):
-        return UserListRenderer(self.service).render(stream, objects)
+        return UserListRenderer(self.service, self.commit).render(stream, objects)
 
-    def _render_user_config_group(self, stream, objects):
-        return UserConfigListRenderer(self.service).render(stream, objects)
+    def _render_view_group(self, stream, objects):
+        return ViewListRenderer(self.service, self.commit).render(stream, objects)
 
 
 class ObjectClassShowRenderer(object):
