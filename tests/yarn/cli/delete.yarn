@@ -1,0 +1,27 @@
+Delete cards from a toucan board
+================================
+
+Delete a card which exists
+--------------------------
+
+    SCENARIO delete an existing card from a toucan board
+
+    GIVEN    a toucan board
+    AND      a card uuid
+
+    WHEN     running "toucan delete card/uuid"
+
+    THEN     the card no longer exists in the store
+    AND      the output includes "Deleted card/[:alnum:]"
+
+Attempt to delete a card which does not exist
+---------------------------------------------
+
+    SCENARIO delete a card which does not exist
+
+    GIVEN    a toucan board
+    AND      a fake uuid
+
+    WHEN     running "toucan delete card/uuid"
+
+    THEN     the output includes "Could not delete card"
