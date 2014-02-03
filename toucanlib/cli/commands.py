@@ -334,3 +334,86 @@ class MoveCommand(object):
             'update-%s' % lane.uuid, lane.uuid, None, lane_props))
 
         return act
+
+
+class DeleteCommand(object):
+
+    """Command to delete a card in a Toucan board."""
+
+    def __init__(self, app, service_url, card):
+        """Initialise a DeleteCommand."""
+        self.app = app
+        self.service_url = service_url
+        self.card = card
+
+    def run(self):
+        """Delete a card from a board."""
+        factory = consonant.service.factories.ServiceFactory()
+        service = factory.service(self.service_url)
+
+        commit = service.ref('master').head
+
+        resolver = toucanlib.cli.names.NameResolver(service, commit)
+
+        # get the specified card
+        cards = resolver.resolve_patterns(self.card, 'card')
+        if not len(cards):
+            self.app.output.write(
+                'Could not delete card: %s does not exist.' % self.card)
+            return False
+        elif len(cards) > 1:
+            self.app.output.write(
+                'Could not delete card: %s is ambiguous.' % self.card)
+            return False
+        card = cards.pop()
+
+        self._delete_card(service, commit, card)
+        self.app.output.write('Deleted %s.\n' % self.card)
+        return True
+
+    def _delete_card(self, service, commit, card):
+        # create the begin action
+        act = []
+        begin_action = actions.BeginAction('begin', commit.sha1)
+        act.append(begin_action)
+
+        # create the delete action
+        delete_action = actions.DeleteAction('delete', card.uuid, None)
+        act.append(delete_action)
+
+        # create the update action
+        lane = service.resolve_reference(card['lane'])
+        act += self._remove_card_from_lane(service, commit, card, lane)
+
+        # set commit signature
+        author = pygit2.Signature(
+            gitcli.subcommand(service.repo, ['config', 'user.name']),
+            gitcli.subcommand(service.repo, ['config', 'user.email']))
+
+        # create the commit action
+        commit_action = actions.CommitAction(
+            'commit', 'refs/heads/master',
+            '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
+            '%s <%s>' % (author.name, author.email), time.strftime('%s %z'),
+            'Delete %s' % self.card)
+        act.append(commit_action)
+
+        # apply transaction
+        t = transaction.Transaction(act)
+
+        service.apply_transaction(t)
+
+    def _remove_card_from_lane(self, service, commit, card, lane):
+        act = []
+        card_refs = lane.get('cards', [])
+        lane_cards = [service.resolve_reference(r.value) for r in card_refs]
+        new_cards = []
+        for c in lane_cards:
+            if c.uuid != card.uuid:
+                new_cards.append(properties.ReferenceProperty(
+                    'cards', {'uuid': c.uuid}))
+        lane_props = [properties.ListProperty('cards', new_cards)]
+        act.append(actions.UpdateAction(
+            'update-%s' % lane.uuid, lane.uuid, None, lane_props))
+
+        return act
