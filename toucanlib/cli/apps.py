@@ -95,3 +95,16 @@ class Toucan(cliapp.Application):
 
         cmd = toucanlib.cli.commands.MoveCommand(self, board, card, lane)
         cmd.run()
+
+    def cmd_delete(self, args):
+        """Delete a card from a Toucan board."""
+        # If there are not enough arguments then raise an exception
+        if len(args) < 2:
+            raise cliapp.AppException(
+                'Usage: toucan delete BOARD CARD')
+
+        board = args[0]
+        card = args[1]
+
+        cmd = toucanlib.cli.commands.DeleteCommand(self, board, card)
+        cmd.run()
