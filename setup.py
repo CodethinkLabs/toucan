@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2013 Codethink Limited.
+# Copyright (C) 2013-2014 Codethink Limited.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -31,12 +31,16 @@ from distutils.cmd import Command
 
 class Check(Command):
 
+    """Command to run the test suite."""
+
     user_options = []
 
     def initialize_options(self):
+        """Initialize options."""
         pass
 
     def finalize_options(self):
+        """Finalize options."""
         pass
 
     def _test_repo_base_url(self):
@@ -125,6 +129,7 @@ class Check(Command):
                      '-v', filename])
 
     def run(self):
+        """Run the Check command."""
         self._check_coding_style()
         self._check_docstrings()
         self._run_unit_tests()
@@ -134,15 +139,20 @@ class Check(Command):
 
 class Clean(Command):
 
+    """Command to clean up the directory."""
+
     user_options = []
 
     def initialize_options(self):
+        """Initialize options."""
         pass
 
     def finalize_options(self):
+        """Finalize options."""
         pass
 
     def run(self):
+        """Run the Clean command."""
         pass
 
 
