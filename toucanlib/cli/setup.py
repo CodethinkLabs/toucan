@@ -510,7 +510,7 @@ class SetupParser(object):
                     'Setup file defines a non-string user avatar: %s' %
                     user['avatar']))
 
-    def _validate_user_amiguity(self, phase, data):
+    def _validate_user_ambiguity(self, phase, data):
         # detect ambiguous users with the same email address
         valid_users = [x for x in data['users']
                        if isinstance(x, dict) and 'email' in x]
