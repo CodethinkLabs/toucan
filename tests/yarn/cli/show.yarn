@@ -190,5 +190,5 @@ Show the board when no pattern is specified
     THEN     the output includes 1 objects
     AND      object 1 has the name "Example board"
     AND      object 1 has the description "This is an example board"
-    AND      object 1 has the views "['view/default', 'view/secondary']
+    AND      object 1 has the views "['view/default', 'view/secondary']"
     AND      object 1 has properties in order "['name', 'description', 'views']"
