@@ -10,10 +10,10 @@ Show information about the board object
 
     WHEN     running "toucan show info/*"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has the name "Example board"
     AND      object 1 has the description "This is an example board"
-    AND      object 1 has the views "['view/default', 'view/secondary']"
+    AND      object 1 has an unordered list views "['view/default', 'view/secondary']"
     AND      object 1 has properties in order "['name', 'description', 'views']"
 
 Show information about a view in a board
@@ -25,7 +25,7 @@ Show information about a view in a board
 
     WHEN     running "toucan show view/default"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has the name "Default"
     AND      object 1 has the description "Default view"
     AND      object 1 has the lanes "['lane/backlog', 'lane/doing', 'lane/review', 'lane/done']"
@@ -40,7 +40,7 @@ Show information about a lane in a board
 
     WHEN     running "toucan show lane/backlog"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has the name "Backlog"
     AND      object 1 has the description "Backlog lane"
     AND      object 1 has the views "['view/default', 'view/secondary']"
@@ -54,9 +54,9 @@ Show information about a card in a board
 
     GIVEN    a populated toucan board
 
-    WHEN     running "toucan show card/*"
+    WHEN     running "toucan show card"
 
-    THEN     the output includes 3 objects
+    THEN     the output includes exactly 1 objects
     AND      object 1 has an identifying number
     AND      object 1 has the title "Implement x for foo"
     AND      object 1 has the description "Implementation detail of x for the feature named foo."
@@ -66,25 +66,8 @@ Show information about a card in a board
     AND      object 1 has the milestone "milestone/xyz"
     AND      object 1 has the assignees "['user/test']"
     AND      object 1 has a list "comments" with 1 elements
-    AND      object 1 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator', 'assignees']"
+    AND      object 1 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator', 'assignees', 'comments']"
 
-    AND      object 2 has an identifying number
-    AND      object 2 has the title "Implement y for foo"
-    AND      object 2 has the description "Implementation detail of y for the feature named foo."
-    AND      object 2 has the lane "Backlog"
-    AND      object 2 has the creator "Test User"
-    AND      object 2 has the reason "xyz"
-    AND      object 2 has the milestone "xyz"
-    AND      object 2 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator']"
-
-    AND      object 3 has an identifying number
-    AND      object 3 has the title "Implement z for foo"
-    AND      object 3 has the description "Implementation detail of z for the feature named foo."
-    AND      object 3 has the lane "Backlog"
-    AND      object 3 has the creator "Test User"
-    AND      object 3 has the reason "xyz"
-    AND      object 3 has the milestone "xyz"
-    AND      object 3 has properties in order "['number', 'title', 'description', 'lane', 'milestone', 'reason', 'creator']"
 
 Show information about a user in a board
 ----------------------------------------
@@ -95,13 +78,13 @@ Show information about a user in a board
 
     WHEN     running "toucan show user/test"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has the name "Test User"
     AND      object 1 has the email "test@test.org"
     AND      object 1 has the roles "['admin']"
     AND      object 1 has the default-view "view/default"
     AND      object 1 has the avatar "avatars.test.org/test"
-    AND      object 1 has properties in order "['name', 'email', 'roles', 'default-view', 'avatar']"
+    AND      object 1 has properties in order "['name', 'email', 'roles', 'avatar', 'default-view']"
 
 Show information about a reason in a board
 ------------------------------------------
@@ -112,12 +95,11 @@ Show information about a reason in a board
 
     WHEN     running "toucan show reason/xyz"
 
-    THEN     the output includes 1 objects
-    AND      object 1 has the name "xyz - implementation of foo"
-    AND      object 1 has the short-name "xyz"
+    THEN     the output includes exactly 1 object
+    AND      object 1 has the name "xyz - implementation of foo."
     AND      object 1 has the description "This is the description of reason/xyz."
     AND      object 1 has a list "cards" with 3 elements
-    AND      object 1 has properties in order "['short-name', 'name', 'description', 'cards']"
+    AND      object 1 has properties in order "['name', 'description', 'cards']"
 
 Show information about a milestone in a board
 ---------------------------------------------
@@ -128,13 +110,12 @@ Show information about a milestone in a board
 
     WHEN     running "toucan show milestone/xyz"
 
-    THEN     the output includes 1 objects
-    AND      object 1 has the name "xyz - implementation of foo"
-    AND      object 1 has the short-name "xyz"
-    AND      object 1 has the description "This is the description of reason/xyz."
+    THEN     the output includes exactly 1 object
+    AND      object 1 has the name "xyz - foo implemented."
+    AND      object 1 has the description "This milestone marks when foo should be implemented by."
     AND      object 1 has the deadline "1970-01-01"
     AND      object 1 has a list "cards" with 3 elements
-    AND      object 1 has properties in order "['short-name', 'name', 'description', 'deadline', 'cards']"
+    AND      object 1 has properties in order "['name', 'description', 'deadline', 'cards']"
 
 Show information about a comment in a board
 -------------------------------------------
@@ -145,13 +126,13 @@ Show information about a comment in a board
 
     WHEN     running "toucan show comment/*"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has an identifying number
     AND      object 1 has a card reference
     AND      object 1 has the author "user/test"
     AND      object 1 has the comment "I will do this!"
     AND      object 1 has the attachment "attachment/example.png"
-    AND      object 1 has properties in order "['author', 'comment', 'attachment']"
+    AND      object 1 has properties in order "['number', 'author', 'card', 'comment', 'attachment']"
 
 Show information about an attachment in a board
 -----------------------------------------------
@@ -162,7 +143,7 @@ Show information about an attachment in a board
 
     WHEN     running "toucan show attachment/example.png"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has a comment reference
     AND      object 1 has the name "example.png"
     AND      object 1 has properties in order "['name', 'comment']"
@@ -174,7 +155,7 @@ Show an error if attempting to show a non-existant object
 
     GIVEN    a toucan board with no cards
 
-    WHEN     running "toucan show card/*"
+    WHEN     running "toucan show comment/*"
 
     THEN     the output includes the phrase "No objects found"
 
@@ -187,8 +168,8 @@ Show the board when no pattern is specified
 
     WHEN     running "toucan show"
 
-    THEN     the output includes 1 objects
+    THEN     the output includes exactly 1 object
     AND      object 1 has the name "Example board"
     AND      object 1 has the description "This is an example board"
-    AND      object 1 has the views "['view/default', 'view/secondary']"
+    AND      object 1 has an unordered list views "['view/default', 'view/secondary']"
     AND      object 1 has properties in order "['name', 'description', 'views']"

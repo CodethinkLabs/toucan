@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2013 Codethink Limited.
+# Copyright (C) 2013-2014 Codethink Limited.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -28,13 +28,13 @@ export XDG_DATA_HOME="$DATADIR/user-data-dir"
 
 
 # Create the home directory
-if [[ ! -d "$HOME" ]]; then
+if [ ! -d "$HOME" ]; then
     mkdir "$HOME"
 fi
 
 
 # Create a global git config for the test user
-if [[ ! -e "$HOME/.gitconfig" ]]; then
+if [ ! -e "$HOME/.gitconfig" ]; then
     cat > "$HOME/.gitconfig" <<-EOF
 [user]
     name = Test user
@@ -44,7 +44,7 @@ fi
 
 
 # Create a consonant register
-if [[ ! -d "$DATADIR/system-config-dir/consonant" ]]; then
+if [ ! -d "$DATADIR/system-config-dir/consonant" ]; then
     mkdir -p "$DATADIR/system-config-dir/consonant"
     cat > "$DATADIR/system-config-dir/consonant/register.yaml" <<-EOF
 schemas:
@@ -78,6 +78,18 @@ run_toucan_cli()
     exit 0
 }
 
+run_toucan_cli_no_exit()
+{
+    if [ "$API" != "cli" ]; then
+        return
+    fi
+
+    trap dump_output 0
+    cd $DATADIR
+    PARAMS=$(cat | xargs echo -n)
+    $SRCDIR/toucan $PARAMS >$DATADIR/stdout 2>$DATADIR/stderr
+    echo $? > $DATADIR/exit-code
+}
 
 run_python_test()
 {
@@ -122,17 +134,15 @@ check_object()
     cd $DATADIR
     CODE=$(cat)
     cat > test.py <<-EOF
-import yaml, types
+import yaml, types, os
 
 with open('stdout', 'r') as stream:
     output = yaml.load_all(stream)
     if not isinstance(output, types.GeneratorType):
         raise Exception('The output produced was not of the expected form.')
     else:
-        data = []
-        for item in output:
-            if item:
-                data.append(item)
+        data = [item for item in output if item]
+        print data
         $CODE
 EOF
     if ! python test.py 2>&1 >/dev/null; then
