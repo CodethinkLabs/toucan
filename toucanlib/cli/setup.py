@@ -18,6 +18,7 @@
 
 
 import consonant
+import mimetypes
 import pygit2
 import time
 import yaml
@@ -142,9 +143,10 @@ class Attachment(object):
 
     """An attachment definition in a board setup file."""
 
-    def __init__(self, name, comment):
+    def __init__(self, name, path, comment):
         """Initialise an Attachment object."""
         self.name = name
+        self.path = path
         self.comment = comment
 
 
@@ -947,6 +949,15 @@ class SetupParser(object):
                             'Setup file defines an attachment with non-string '
                             'name: %s' % attachment['name']))
 
+                    if not 'path' in attachment:
+                        phase.error(SetupParserError(
+                            'Setup file defines an attachment without a path: '
+                            '%s' % attachment))
+                    elif not isinstance(attachment['path'], basestring):
+                        phase.error(SetupParserError(
+                            'Setup file defines an attachment with non-string '
+                            'path: %s' % attachment['path']))
+
                     if not 'comment' in attachment:
                         phase.error(SetupParserError(
                             'Setup file defines an attachment without a '
@@ -958,6 +969,7 @@ class SetupParser(object):
         for attachment in data['attachments']:
             setup_file.attachments[attachment['name']] = Attachment(
                 attachment['name'],
+                attachment['path'],
                 attachment['comment'])
 
 
@@ -1031,11 +1043,14 @@ class SetupRunner(object):
 
         # create actions for all the objects
         create_actions = self._create_objects(setup_file, action_ids)
+        update_actions = self._update_objects(setup_file, action_ids)
+        raw_actions = self._set_raw_properties(setup_file, action_ids)
 
         # create a transaction to populate the store with the initial
         # board info, views, lanes and users
         t = transaction.Transaction(
-            [begin_action] + create_actions + [commit_action])
+            [begin_action] + create_actions +
+            update_actions + raw_actions + [commit_action])
 
         # apply the transaction
         store.apply_transaction(t)
@@ -1066,6 +1081,11 @@ class SetupRunner(object):
             actions.append(self._create_attachment(
                 setup_file, action_ids, attachment))
 
+        return actions
+
+    def _update_objects(self, setup_file, action_ids):
+        actions = []
+
         # second pass: link all these objects together
         for view in setup_file.views.itervalues():
             actions.append(self._update_view(setup_file, action_ids, view))
@@ -1085,6 +1105,16 @@ class SetupRunner(object):
                 setup_file, action_ids, comment))
         for attachment in setup_file.attachments.itervalues():
             actions.append(self._update_attachment(
+                setup_file, action_ids, attachment))
+
+        return actions
+
+    def _set_raw_properties(self, setup_file, action_ids):
+        actions = []
+
+        # third pass: set raw properties
+        for attachment in setup_file.attachments.itervalues():
+            actions.append(self._set_raw_attachment_property(
                 setup_file, action_ids, attachment))
 
         return actions
@@ -1336,7 +1366,16 @@ class SetupRunner(object):
         ref = properties.ReferenceProperty(
             'comment', {'action': action_ids[comment]})
         props.append(ref)
-
         action_id = action_ids[attachment]
         return actions.UpdateAction(
             'update-%s' % action_id, None, action_id, props)
+
+    def _set_raw_attachment_property(self, setup_file, action_ids, attachment):
+        file_path = attachment.path + '/' + attachment.name
+        mime_type = mimetypes.guess_type(file_path)[0]
+        with open(file_path, 'rb') as f:
+            data = f.read()
+        action_id = action_ids[attachment]
+        return actions.UpdateRawPropertyAction(
+            'set-raw-%s' % action_id, None,
+            'update-%s' % action_id, 'data', mime_type, data)
