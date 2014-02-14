@@ -1245,11 +1245,12 @@ class SetupRunner(object):
 
     def _update_user(self, setup_file, action_ids, user):
         props = []
-        default_view = [x for x in setup_file.views.itervalues()
-                        if x.name == user.default_view][0]
-        action_id = action_ids[default_view]
-        props.append(properties.ReferenceProperty(
-            'default-view', {'action': action_id}))
+        if user.default_view:
+            default_view = [x for x in setup_file.views.itervalues()
+                            if x.name == user.default_view][0]
+            action_id = action_ids[default_view]
+            props.append(properties.ReferenceProperty(
+                'default-view', {'action': action_id}))
 
         action_id = action_ids[user]
         return actions.UpdateAction(
