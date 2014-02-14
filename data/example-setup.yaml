@@ -75,3 +75,7 @@ comments:
       text wrapping looks in toucan show.
     author: Jannis Pohlmann
     card: 0
+attachments:
+  - name: example.png
+    path: /home/adam/toucan/data
+    comment: 0
