@@ -381,6 +381,7 @@ class InfoShowRenderer(ObjectClassShowRenderer):
             views = self.service.objects(self.commit, view_class)
             length = max(len(v['name']) for v in views)
 
+            lines.append('views:')
             self._list_views(views, lines, length)
 
             # add separator
@@ -407,10 +408,21 @@ class AttachmentShowRenderer(ObjectClassShowRenderer):
             # first, render the name of the attachment (usually a filename)
             lines.append('name: %s' % (obj['name']))
 
-            # finally, render the comment that has the attachment
-            lines.append('comment:')
-            _, comments = self._resolve_references([obj['comment']])
-            self._list_comments(comments, lines)
+            # get required information
+            comment = self.service.resolve_reference(obj['comment'])
+            number = self.name_generator.presentable_name(comment).ljust(13)
+            user = self.service.resolve_reference(comment['author'])
+
+            # format comment
+            format_string = 'comment: %s # %s <%s>'
+            lines.append(format_string % (number, user['name'], user['email']))
+            # wrap the comment
+            indent = 20
+            wrapper = textwrap.TextWrapper(
+                initial_indent=(' ' * indent) + '# ',
+                subsequent_indent=(' ' * indent) + '# ',
+                width=80)
+            lines += wrapper.wrap(comment['comment'])
 
             # add separator
             lines.append('---')
@@ -606,12 +618,15 @@ class MilestoneShowRenderer(ObjectClassShowRenderer):
             lines.append('deadline: %s' % date)
 
             # finally the cards
-            if 'cards' in obj:
+            card_class = self.service.klass(self.commit, 'card')
+            all_cards = self.service.objects(self.commit, card_class)
+            cards = []
+            for card in all_cards:
+                ref_obj = self.service.resolve_reference(card['milestone'])
+                if ref_obj['short-name'] == obj['short-name']:
+                    cards.append(card)
+            if cards:
                 lines.append('cards:')
-                klass = self.service.klass(self.commit, 'card')
-                all_cards = self.service.objects(self.commit, klass)
-                cards = [x for x in all_cards
-                         if x.get('milestone', '') == obj['short-name']]
                 self._list_cards(cards, lines)
 
             # add separator
@@ -648,12 +663,15 @@ class ReasonShowRenderer(ObjectClassShowRenderer):
                 pass
 
             # finally, the cards associated with the reason
-            if 'cards' in obj:
+            card_class = self.service.klass(self.commit, 'card')
+            all_cards = self.service.objects(self.commit, card_class)
+            cards = []
+            for card in all_cards:
+                card_reason = self.service.resolve_reference(card['reason'])
+                if card_reason['short-name'] == obj['short-name']:
+                    cards.append(card)
+            if cards:
                 lines.append('cards:')
-                klass = self.service.klass(self.commit, 'card')
-                all_cards = self.service.objects(self.commit, klass)
-                cards = [x for x in all_cards
-                         if x['reason'] == obj['short-name']]
                 self._list_cards(cards, lines)
 
             # add separator
