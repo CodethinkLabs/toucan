@@ -622,9 +622,10 @@ class MilestoneShowRenderer(ObjectClassShowRenderer):
             all_cards = self.service.objects(self.commit, card_class)
             cards = []
             for card in all_cards:
-                ref_obj = self.service.resolve_reference(card['milestone'])
-                if ref_obj['short-name'] == obj['short-name']:
-                    cards.append(card)
+                if card.get('milestone', ''):
+                    ref_obj = self.service.resolve_reference(card['milestone'])
+                    if ref_obj['short-name'] == obj['short-name']:
+                        cards.append(card)
             if cards:
                 lines.append('cards:')
                 self._list_cards(cards, lines)
