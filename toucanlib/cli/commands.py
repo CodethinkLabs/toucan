@@ -40,7 +40,8 @@ class SetupCommand(object):
         """Perform the board setup."""
         # parse the setup file
         parser = toucanlib.cli.setup.SetupParser()
-        setup_file = parser.parse(open(self.setup_filename, 'r'))
+        setup_file = parser.parse(self.setup_filename,
+                                  open(self.setup_filename, 'r'))
 
         # create the target directory
         try:

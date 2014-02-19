@@ -19,6 +19,7 @@
 
 import consonant
 import mimetypes
+import os
 import pygit2
 import time
 import yaml
@@ -154,8 +155,10 @@ class SetupFile(object):
 
     """A Toucan board setup file."""
 
-    def __init__(self):
+    def __init__(self, filename):
         """Initialise a SetupFile."""
+        self.filename = filename
+
         # The setup file can define any of the following, so all of them
         # should have the potential to be loaded.
         self.meta_data = None
@@ -181,7 +184,7 @@ class SetupParser(object):
 
     """A parser for Toucan board setup files."""
 
-    def parse(self, stream):
+    def parse(self, filename, stream):
         """Parse a file stream and return a SetupFile on success."""
         # phase 1: load the input YAML
         with Phase() as phase:
@@ -209,7 +212,7 @@ class SetupParser(object):
 
         # phase 3: load the setup data into a SetupFile
         with Phase() as phase:
-            setup_file = SetupFile()
+            setup_file = SetupFile(filename)
             self._load_meta_data(phase, data, setup_file)
             self._load_board_info(phase, data, setup_file)
             self._load_views(phase, data, setup_file)
@@ -967,10 +970,14 @@ class SetupParser(object):
         if not 'attachments' in data:
             return
         for attachment in data['attachments']:
+            if os.path.isabs(attachment['path']):
+                path = attachment['path']
+            else:
+                dirname = os.path.dirname(setup_file.filename)
+                path = os.path.join(dirname, attachment['path'])
+                path = os.path.abspath(path)
             setup_file.attachments[attachment['name']] = Attachment(
-                attachment['name'],
-                attachment['path'],
-                attachment['comment'])
+                attachment['name'], path, attachment['comment'])
 
 
 class SetupRunner(object):
@@ -1372,9 +1379,8 @@ class SetupRunner(object):
             'update-%s' % action_id, None, action_id, props)
 
     def _set_raw_attachment_property(self, setup_file, action_ids, attachment):
-        file_path = attachment.path + '/' + attachment.name
-        mime_type = mimetypes.guess_type(file_path)[0]
-        with open(file_path, 'rb') as f:
+        mime_type = mimetypes.guess_type(attachment.path)[0]
+        with open(attachment.path, 'rb') as f:
             data = f.read()
         action_id = action_ids[attachment]
         return actions.UpdateRawPropertyAction(

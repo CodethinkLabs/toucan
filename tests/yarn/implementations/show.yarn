@@ -103,7 +103,7 @@ Set up a board
         id: 0
     attachments:
       - name: example.png
-        path: $SRCDIR/data
+        path: $SRCDIR/data/example.png
         comment: 0
     EOF
 
@@ -120,7 +120,6 @@ Set up a board
     with open('card_id', 'w+') as f:
         f.write(name_gen.card_id(objects[0]))
     EOF
-    
 
 Set up a board without cards
 ----------------------------
