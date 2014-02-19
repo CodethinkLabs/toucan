@@ -51,7 +51,7 @@ class ObjectLoader():
         self.data = {}
 
     def load(self):
-        """Load data as yaml."""
+        """Load data as YAML and return true/false depending on success."""
         try:
             with open(self.data_file, 'r') as stream:
                 self.data = yaml.load(stream)
@@ -63,7 +63,7 @@ class ObjectLoader():
             with open(self.data_file, 'r') as stream:
                 data = stream.read()
             raise cliapp.AppException(
-                'Input yaml was not valid yaml: %s' % data)
+                'Input YAML was not valid YAML: %s' % data)
 
     def create(self, klass, phase):
         """Create a transaction to add the described object to the store."""
