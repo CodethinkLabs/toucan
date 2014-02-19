@@ -135,7 +135,7 @@ class AddCommand(object):
         self.klass = klass
 
     def run(self):
-        """Add an object to a board."""
+        """Add an object to a board and return whether this succeeded."""
         # get a Consonant service
         factory = consonant.service.factories.ServiceFactory()
         service = factory.service(self.service_url)
