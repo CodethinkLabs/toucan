@@ -61,22 +61,21 @@ from the root directory of the source tree.
 Contributing
 ------------
 
-The development of Toucan takes place within the Consonant project on
-GitHub:
+The development of Toucan takes place within the Codethink Labs project
+on GitHub:
 
-  https://github.com/consonant/toucan
+  https://github.com/CodethinkLabs/toucan
 
 Anyone interested in improving Toucan is welcome to clone the project
 repository and send pull requests.
 
-We also use the `toucan@consonant-project.org` mailinglist for
-discussions involving the usage and development of Toucan.
+We don't currently have a mailing list set up for discussions.
 
 
 License
 -------
 
-Copyright (C) 2013 Codethink Limited.
+Copyright (C) 2013-2014 Codethink Limited.
 
 Toucan is licensed under the GNU Affero General Public License version
 3 or later (AGPLv3+). The full text of the license can be found in the
