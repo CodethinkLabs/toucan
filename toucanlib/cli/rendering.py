@@ -150,7 +150,7 @@ class ListRenderer(object):
     def _group_objects(self, objects):
         groups = {}
         for obj in objects:
-            if not obj.klass.name in groups:
+            if obj.klass.name not in groups:
                 groups[obj.klass.name] = []
             groups[obj.klass.name].append(obj)
         return groups
@@ -784,7 +784,7 @@ class ShowRenderer(object):
     def _group_objects(self, objects):
         groups = {}
         for obj in objects:
-            if not obj.klass.name in groups:
+            if obj.klass.name not in groups:
                 groups[obj.klass.name] = []
             groups[obj.klass.name].append(obj)
         return groups

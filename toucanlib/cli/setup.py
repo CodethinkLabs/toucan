@@ -228,7 +228,7 @@ class SetupParser(object):
 
     def _validate_meta_data(self, phase, data):
         # validate the service name
-        if not 'name' in data:
+        if 'name' not in data:
             phase.error(SetupParserError(
                 'Setup file defines no service name'))
         elif not isinstance(data['name'], basestring):
@@ -241,7 +241,7 @@ class SetupParser(object):
                 data['name']))
 
         # validate the schema name
-        if not 'schema' in data:
+        if 'schema' not in data:
             phase.error(SetupParserError(
                 'Setup file defines no schema name'))
         elif not isinstance(data['schema'], basestring):
@@ -257,7 +257,7 @@ class SetupParser(object):
         setup_file.meta_data = MetaData(data['name'], data['schema'])
 
     def _validate_board_info(self, phase, data):
-        if not 'info' in data:
+        if 'info' not in data:
             phase.error(SetupParserError(
                 'Setup file defines no board info'))
         elif not isinstance(data['info'], dict):
@@ -266,7 +266,7 @@ class SetupParser(object):
                 data['info']))
         else:
             # validate the board name
-            if not 'name' in data['info']:
+            if 'name' not in data['info']:
                 phase.error(SetupParserError(
                     'Setup file defines no board name'))
             elif not isinstance(data['info']['name'], basestring):
@@ -287,7 +287,7 @@ class SetupParser(object):
             data['info'].get('description', None))
 
     def _validate_views(self, phase, data):
-        if not 'views' in data:
+        if 'views' not in data:
             return
 
         if not isinstance(data['views'], list):
@@ -300,7 +300,7 @@ class SetupParser(object):
                         'Setup file defines a non-dict view: %s' % view))
                 else:
                     # validate the view name
-                    if not 'name' in view:
+                    if 'name' not in view:
                         phase.error(SetupParserError(
                             'Setup file defines a view without a name: %s' %
                             view))
@@ -318,7 +318,7 @@ class SetupParser(object):
                             'description: %s' % view['description']))
 
                     # validate the lane references in the view
-                    if not 'lanes' in view:
+                    if 'lanes' not in view:
                         phase.error(SetupParserError(
                             'Setup file defines a view with no lanes: %s' %
                             view))
@@ -346,7 +346,7 @@ class SetupParser(object):
                                         lane))
 
     def _load_views(self, phase, data, setup_file):
-        if not 'views' in data:
+        if 'views' not in data:
             return
         for view in data['views']:
             setup_file.views[view['name']] = View(
@@ -355,7 +355,7 @@ class SetupParser(object):
                 view.get('lanes', []))
 
     def _validate_lanes(self, phase, data):
-        if not 'lanes' in data:
+        if 'lanes' not in data:
             return
 
         if not isinstance(data['lanes'], list):
@@ -368,7 +368,7 @@ class SetupParser(object):
                         'Setup file defines a non-dict lane: %s' % lane))
                 else:
                     # validate the lane name
-                    if not 'name' in lane:
+                    if 'name' not in lane:
                         phase.error(SetupParserError(
                             'Setup file defines a lane without a name: %s' %
                             lane))
@@ -413,7 +413,7 @@ class SetupParser(object):
                            if isinstance(x, dict) and 'name' in x]
             names = {}
             for lane in valid_lanes:
-                if not lane['name'] in names:
+                if lane['name'] not in names:
                     names[lane['name']] = []
                 names[lane['name']].append(lane)
             for name, lanes in names.iteritems():
@@ -423,7 +423,7 @@ class SetupParser(object):
                         (len(lanes), name)))
 
     def _load_lanes(self, phase, data, setup_file):
-        if not 'lanes' in data:
+        if 'lanes' not in data:
             return
         for lane in data['lanes']:
             setup_file.lanes[lane['name']] = Lane(
@@ -432,7 +432,7 @@ class SetupParser(object):
                 lane.get('cards', []))
 
     def _validate_users(self, phase, data):
-        if not 'users' in data:
+        if 'users' not in data:
             phase.error(SetupParserError(
                 'Setup file defines no users'))
         else:
@@ -455,7 +455,7 @@ class SetupParser(object):
 
     def _validate_user_name(self, phase, user):
         # validate user name
-        if not 'name' in user:
+        if 'name' not in user:
             phase.error(SetupParserError(
                 'Setup file defines a user without a name: %s' % user))
         elif not isinstance(user['name'], basestring):
@@ -465,7 +465,7 @@ class SetupParser(object):
 
     def _validate_user_email(self, phase, user):
         # validate user email
-        if not 'email' in user:
+        if 'email' not in user:
             phase.error(SetupParserError(
                 'Setup file defines a user without an email address: %s' %
                 user))
@@ -476,7 +476,7 @@ class SetupParser(object):
 
     def _validate_user_roles(self, phase, user):
         # validate user roles
-        if not 'roles' in user:
+        if 'roles' not in user:
             phase.error(SetupParserError(
                 'Setup file defines a user with no roles: %s' % user))
         elif not isinstance(user['roles'], list):
@@ -521,7 +521,7 @@ class SetupParser(object):
                        if isinstance(x, dict) and 'email' in x]
         emails = {}
         for user in valid_users:
-            if not user['email'] in emails:
+            if user['email'] not in emails:
                 emails[user['email']] = []
             emails[user['email']].append(user)
         for email, users in emails.iteritems():
@@ -545,7 +545,7 @@ class SetupParser(object):
                 'Setup file defines no users with the role "admin"'))
 
     def _load_users(self, phase, data, setup_file):
-        if not 'users' in data:
+        if 'users' not in data:
             return
         for user in data['users']:
             setup_file.users[user['name']] = User(
@@ -556,7 +556,7 @@ class SetupParser(object):
                 user.get('avatar', ''))
 
     def _validate_cards(self, phase, data):
-        if not 'cards' in data:
+        if 'cards' not in data:
             return
 
         if not isinstance(data['cards'], list):
@@ -578,7 +578,7 @@ class SetupParser(object):
                     self._validate_card_assignees(phase, card, data)
 
     def _validate_card_id(self, phase, card):
-        if not 'id' in card:
+        if 'id' not in card:
             phase.error(SetupParserError(
                 'Setup file defines a card without an id: %s' % card))
         elif not isinstance(card['id'], int):
@@ -587,7 +587,7 @@ class SetupParser(object):
 
     def _validate_card_title(self, phase, card):
         # validate card title
-        if not 'title' in card:
+        if 'title' not in card:
             phase.error(SetupParserError(
                 'Setup file defines a card without a title: %s' % card))
         elif not isinstance(card['title'], basestring):
@@ -597,7 +597,7 @@ class SetupParser(object):
 
     def _validate_card_creator(self, phase, card, data):
         # validate card creator
-        if not 'creator' in card:
+        if 'creator' not in card:
             phase.error(SetupParserError(
                 'Setup file defines a card without a creator: %s' % card))
         elif not isinstance(card['creator'], basestring):
@@ -623,7 +623,7 @@ class SetupParser(object):
 
     def _validate_card_lane(self, phase, card, data):
         # validate card lane
-        if not 'lane' in card:
+        if 'lane' not in card:
             phase.error(SetupParserError(
                 'Setup file defines a card without a lane: %s' % card))
         elif not isinstance(card['lane'], basestring):
@@ -658,7 +658,7 @@ class SetupParser(object):
 
     def _validate_card_reason(self, phase, card, data):
         # validate card reason
-        if not 'reason' in card:
+        if 'reason' not in card:
             phase.error(SetupParserError(
                 'Setup file defines a card without a reason: %s' % card))
         elif not isinstance(card['reason'], basestring):
@@ -697,7 +697,7 @@ class SetupParser(object):
                                 'a non-existent user: %s' % card))
 
     def _load_cards(self, phase, data, setup_file):
-        if not 'cards' in data:
+        if 'cards' not in data:
             return
         for card in data['cards']:
             setup_file.cards[card['title']] = Card(
@@ -712,7 +712,7 @@ class SetupParser(object):
                 card.get('comments', []))
 
     def _validate_reasons(self, phase, data):
-        if not 'reasons' in data:
+        if 'reasons' not in data:
             return
         if not isinstance(data['reasons'], list):
             phase.error(SetupParserError(
@@ -724,7 +724,7 @@ class SetupParser(object):
                         'Setup file defines a non-dict reason: %s' % reason))
                 else:
                     # validate short_name
-                    if not 'short-name' in reason:
+                    if 'short-name' not in reason:
                         phase.error(SetupParserError(
                             'Setup file defines a reason without a '
                             'short-name: %s' % reason))
@@ -734,7 +734,7 @@ class SetupParser(object):
                             'short_name: %s' % reason['short-name']))
 
                     # validate name
-                    if not 'name' in reason:
+                    if 'name' not in reason:
                         phase.error(SetupParserError(
                             'Setup file defines a reason without a name: %s' %
                             reason))
@@ -756,7 +756,7 @@ class SetupParser(object):
                     #   currently unsupported by python-consonant.
 
     def _load_reasons(self, phase, data, setup_file):
-        if not 'reasons' in data:
+        if 'reasons' not in data:
             return
         for reason in data['reasons']:
             setup_file.reasons[reason['name']] = Reason(
@@ -766,7 +766,7 @@ class SetupParser(object):
                 reason.get('work-items', []))
 
     def _validate_milestones(self, phase, data):
-        if not 'milestones' in data:
+        if 'milestones' not in data:
             return
         if not isinstance(data['milestones'], list):
             phase.error(SetupParserError(
@@ -779,7 +779,7 @@ class SetupParser(object):
                         milestone))
                 else:
                     # validate short_name
-                    if not 'short-name' in milestone:
+                    if 'short-name' not in milestone:
                         phase.error(SetupParserError(
                             'Setup file defines a milestone without a '
                             'short-name: %s' % milestone))
@@ -789,7 +789,7 @@ class SetupParser(object):
                             'short_name: %s' % milestone['short-name']))
 
                     # validate name
-                    if not 'name' in milestone:
+                    if 'name' not in milestone:
                         phase.error(SetupParserError(
                             'Setup file defines a milestone without a '
                             'name: %s' % milestone))
@@ -808,7 +808,7 @@ class SetupParser(object):
                                 milestone['description']))
 
                     # validate deadline
-                    if not 'deadline' in milestone:
+                    if 'deadline' not in milestone:
                         phase.error(SetupParserError(
                             'Setup file defines a milestone without a '
                             'deadline: %s' % milestone))
@@ -818,7 +818,7 @@ class SetupParser(object):
                             'deadline: %s' % milestone['deadline']))
 
     def _load_milestones(self, phase, data, setup_file):
-        if not 'milestones' in data:
+        if 'milestones' not in data:
             return
         for milestone in data['milestones']:
             setup_file.milestones[milestone['short-name']] = Milestone(
@@ -828,7 +828,7 @@ class SetupParser(object):
                 milestone['deadline'])
 
     def _validate_comments(self, phase, data):
-        if not 'comments' in data:
+        if 'comments' not in data:
             return
         if not isinstance(data['comments'], list):
             phase.error(SetupParserError(
@@ -846,7 +846,7 @@ class SetupParser(object):
                     self._validate_comment_card(phase, comment, data)
 
     def _validate_comment_id(self, phase, comment):
-        if not 'id' in comment:
+        if 'id' not in comment:
             phase.error(SetupParserError(
                 'Setup file defines a comment without an id: %s' % comment))
         elif not isinstance(comment['id'], int):
@@ -856,7 +856,7 @@ class SetupParser(object):
 
     def _validate_comment_comment(self, phase, comment):
         # validate comment
-        if not 'comment' in comment:
+        if 'comment' not in comment:
             phase.error(SetupParserError(
                 'Setup file defines a comment without a comment: %s' %
                 comment))
@@ -867,7 +867,7 @@ class SetupParser(object):
 
     def _validate_comment_author(self, phase, comment, data):
         # validate author
-        if not 'author' in comment:
+        if 'author' not in comment:
             phase.error(SetupParserError(
                 'Setup file defines a comment without an author: %s' %
                 comment))
@@ -902,7 +902,7 @@ class SetupParser(object):
                         'non-existant attachment reference: %s' % comment))
 
     def _validate_comment_card(self, phase, comment, data):
-        if not 'card' in comment:
+        if 'card' not in comment:
             phase.error(SetupParserError(
                 'Setup file defines a comment without a card: %s' % comment))
         elif not isinstance(comment['card'], int):
@@ -919,7 +919,7 @@ class SetupParser(object):
                     'non-existant card reference: %s' % comment))
 
     def _load_comments(self, phase, data, setup_file):
-        if not 'comments' in data:
+        if 'comments' not in data:
             return
         for comment in data['comments']:
             setup_file.comments[comment['id']] = Comment(
@@ -930,7 +930,7 @@ class SetupParser(object):
                 comment['card'])
 
     def _validate_attachments(self, phase, data):
-        if not 'attachments' in data:
+        if 'attachments' not in data:
             return
         if not isinstance(data['attachments'], list):
             phase.error(SetupParserError(
@@ -943,7 +943,7 @@ class SetupParser(object):
                         attachment))
                 else:
                     # validate name
-                    if not 'name' in attachment:
+                    if 'name' not in attachment:
                         phase.error(SetupParserError(
                             'Setup file defines an attachment without a name: '
                             '%s' % attachment))
@@ -952,7 +952,7 @@ class SetupParser(object):
                             'Setup file defines an attachment with non-string '
                             'name: %s' % attachment['name']))
 
-                    if not 'path' in attachment:
+                    if 'path' not in attachment:
                         phase.error(SetupParserError(
                             'Setup file defines an attachment without a path: '
                             '%s' % attachment))
@@ -961,13 +961,13 @@ class SetupParser(object):
                             'Setup file defines an attachment with non-string '
                             'path: %s' % attachment['path']))
 
-                    if not 'comment' in attachment:
+                    if 'comment' not in attachment:
                         phase.error(SetupParserError(
                             'Setup file defines an attachment without a '
                             'comment: %s' % attachment['comment']))
 
     def _load_attachments(self, phase, data, setup_file):
-        if not 'attachments' in data:
+        if 'attachments' not in data:
             return
         for attachment in data['attachments']:
             if os.path.isabs(attachment['path']):
